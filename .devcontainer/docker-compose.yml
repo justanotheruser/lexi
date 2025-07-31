@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ../..:/workspace:cached
+    command: sleep infinity
+    environment:
+      - PYTHONPATH=/workspace
+      - DATABASE_URL=postgresql://lexi:lexi123@db:5432/lexi_dev
+      - REDIS_URL=redis://redis:6379/0
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+    depends_on:
+      - db
+      - redis
+    ports:
+      - "8000:8000"
+    networks:
+      - lexi-network
+
+  db:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    environment:
+      - POSTGRES_DB=lexi_dev
+      - POSTGRES_USER=lexi
+      - POSTGRES_PASSWORD=lexi123
+    ports:
+      - "5432:5432"
+    networks:
+      - lexi-network
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    networks:
+      - lexi-network
+
+volumes:
+  postgres-data:
+
+networks:
+  lexi-network:
+    driver: bridge 
