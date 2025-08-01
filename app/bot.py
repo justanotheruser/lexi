@@ -6,6 +6,7 @@ from aiogram.types import BotCommand, Message, WebhookInfo
 from loguru import logger
 
 from app.settings import get_settings
+from app.utils.language import find_best_language_match, get_user_language_message
 
 cfg = get_settings()
 
@@ -17,22 +18,44 @@ bot = Bot(
 )
 
 
-@telegram_router.message(F.text == "/id")
-async def handle_id_command(message: Message) -> None:
-    """Handle /id command and return user ID"""
+@telegram_router.message(F.text == "/start")
+async def handle_start_command(message: Message) -> None:
+    """Handle /start command and ask user for language selection"""
     if message.from_user is None:
         await message.reply("❌ Unable to get user information")
         return
 
-    user_id = message.from_user.id
-    user_name = message.from_user.full_name or message.from_user.username or "Unknown"
+    # Get user's language (default to English if not available)
+    user_language = message.from_user.language_code or "en"
 
-    response = f"🆔 <b>Your Information:</b>\n\n"
-    response += f"👤 <b>Name:</b> {user_name}\n"
-    response += f"🆔 <b>User ID:</b> <code>{user_id}</code>\n"
-    response += f"📝 <b>Username:</b> @{message.from_user.username or 'None'}\n"
+    # Get the language selection message in user's language
+    language_message = get_user_language_message(user_language)
 
-    await message.reply(response)
+    await message.reply(language_message)
+
+
+@telegram_router.message(F.text)
+async def handle_language_selection(message: Message) -> None:
+    """Handle language selection from user input"""
+    if message.from_user is None or message.text is None:
+        return
+
+    user_input = message.text.strip()
+
+    # Find the best matching language
+    language_code, confidence = find_best_language_match(
+        user_input, cfg.language.supported_languages
+    )
+
+    if language_code:
+        # Language found - send confirmation
+        language_name = cfg.language.supported_languages[language_code]
+        response = f"✅ Ok, let's learn <b>{language_name}</b>!"
+        await message.reply(response)
+    else:
+        # Language not supported
+        response = "❌ Language not supported. Please try again with a supported language."
+        await message.reply(response)
 
 
 async def start_listening_for_updates() -> asyncio.Task | None:
@@ -77,7 +100,7 @@ async def set_webhook(my_bot: Bot) -> None:
 async def set_bot_commands_menu(my_bot: Bot) -> None:
     # Register commands for Telegram bot (menu)
     commands = [
-        BotCommand(command="/id", description="👋 Get my ID"),
+        BotCommand(command="/start", description="🚀 Start language learning"),
     ]
     try:
         await my_bot.set_my_commands(commands)

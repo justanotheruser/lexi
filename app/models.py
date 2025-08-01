@@ -39,7 +39,4 @@ class UserVocabularyProgress(SQLModel, table=True):
     times_seen: int = Field(default=0)
     times_quized: Optional[int] = None
     correct_answers: Optional[int] = None
-    last_seen_at: datetime = Field(default_factory=datetime.utcnow)
-    
-    class Config:
-        table_name = "user_vocabulary_progress" 
+    last_seen_at: datetime = Field(default_factory=datetime.utcnow) 

@@ -34,6 +34,26 @@ class LLMSettings(BaseSettings):
     }
 
 
+class LanguageSettings(BaseSettings):
+    """Language configuration settings"""
+
+    # Supported languages with their codes and display names
+    supported_languages: dict[str, str] = {
+        "en": "English",
+        "ru": "Russian",
+        "es": "Spanish",
+        "it": "Italian",
+        "fr": "French",
+        "be": "Беларусский",
+        "uk": "Украинский",
+    }
+
+    model_config = {
+        "case_sensitive": False,
+        "extra": "ignore",
+    }
+
+
 class Settings(BaseSettings):
     """Application settings"""
 
@@ -41,6 +61,8 @@ class Settings(BaseSettings):
 
     telegram: TelegramSettings = TelegramSettings()
     llm: LLMSettings = LLMSettings()
+    language: LanguageSettings = LanguageSettings()
+
     # Database
     database_url: str = "postgresql://lexi:lexi123@db:5432/lexi_dev"
 
