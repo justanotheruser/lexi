@@ -23,6 +23,8 @@ pydantic-settings = "^2.1.0"
 python-dotenv = "^1.0.0"
 openai = "^1.3.7"
 loguru = "^0.7.3"
+alembic = "^1.13.1"
+psycopg2-binary = "^2.9.9"
 
 [tool.poetry.group.dev.dependencies]
 black = "^25.1.0"
@@ -101,3 +103,6 @@ asyncio_mode = "auto"
 
 [tool.pylint.messages_control]
 disable = ["C0115", "C0116"]
+
+[tool.pylint.master]
+ignore = ["alembic/versions"]
