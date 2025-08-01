@@ -48,6 +48,73 @@ class LanguageSettings(BaseSettings):
         "uk": "Украинский",
     }
 
+    # Language names in different languages for fuzzy matching
+    supported_languages_in_user_language: dict[str, dict[str, str]] = {
+        "en": {
+            "en": "English",
+            "ru": "Russian",
+            "es": "Spanish",
+            "it": "Italian",
+            "fr": "French",
+            "be": "Belarusian",
+            "uk": "Ukrainian",
+        },
+        "ru": {
+            "en": "Английский",
+            "ru": "Русский",
+            "es": "Испанский",
+            "it": "Итальянский",
+            "fr": "Французский",
+            "be": "Беларусский",
+            "uk": "Украинский",
+        },
+        "es": {
+            "en": "Inglés",
+            "ru": "Ruso",
+            "es": "Español",
+            "it": "Italiano",
+            "fr": "Francés",
+            "be": "Bielorruso",
+            "uk": "Ucraniano",
+        },
+        "it": {
+            "en": "Inglese",
+            "ru": "Russo",
+            "es": "Spagnolo",
+            "it": "Italiano",
+            "fr": "Francese",
+            "be": "Bielorusso",
+            "uk": "Ucraino",
+        },
+        "fr": {
+            "en": "Anglais",
+            "ru": "Russe",
+            "es": "Espagnol",
+            "it": "Italien",
+            "fr": "Français",
+            "be": "Biélorusse",
+            "uk": "Ukrainien",
+        },
+        "be": {
+            "en": "Англійская",
+            "ru": "Руская",
+            "es": "Іспанская",
+            "it": "Італьянская",
+            "fr": "Французская",
+            "be": "Беларуская",
+            "uk": "Украінская",
+        },
+        "uk": {
+            "en": "Англійська",
+            "ru": "Російська",
+            "es": "Іспанська",
+            "it": "Італійська",
+            "fr": "Французька",
+            "be": "Білоруська",
+            "uk": "Українська",
+        },
+    }
+
     model_config = {
         "case_sensitive": False,
         "extra": "ignore",

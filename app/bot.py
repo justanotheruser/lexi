@@ -6,7 +6,12 @@ from aiogram.types import BotCommand, Message, WebhookInfo
 from loguru import logger
 
 from app.settings import get_settings
-from app.utils.language import find_best_language_match, get_user_language_message
+from app.utils.language import (
+    find_best_language_match,
+    get_language_confirmation_message,
+    get_language_not_supported_message,
+    get_user_language_message,
+)
 
 cfg = get_settings()
 
@@ -42,19 +47,27 @@ async def handle_language_selection(message: Message) -> None:
 
     user_input = message.text.strip()
 
+    # Get user's language for localized messages
+    user_language = message.from_user.language_code or "en"
+
     # Find the best matching language
     language_code, confidence = find_best_language_match(
-        user_input, cfg.language.supported_languages
+        user_input,
+        cfg.language.supported_languages,
+        user_language,
+        cfg.language.supported_languages_in_user_language,
     )
 
     if language_code:
         # Language found - send confirmation
         language_name = cfg.language.supported_languages[language_code]
-        response = f"✅ Ok, let's learn <b>{language_name}</b>!"
+        confirmation_message = get_language_confirmation_message(user_language)
+        response = f"✅ {confirmation_message} <b>{language_name}</b>!"
         await message.reply(response)
     else:
         # Language not supported
-        response = "❌ Language not supported. Please try again with a supported language."
+        error_message = get_language_not_supported_message(user_language)
+        response = f"❌ {error_message}"
         await message.reply(response)
 
 
