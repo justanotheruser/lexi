@@ -1,0 +1,35 @@
+[flake8]
+max-line-length = 100
+extend-ignore = [
+    # E203: whitespace before ':' (conflicts with black)
+    "E203",
+    # W503: line break before binary operator (conflicts with black)
+    "W503",
+    # E501: line too long (handled by black)
+    "E501",
+    # E722: do not use bare except (too strict for some cases)
+    "E722",
+    # F401: imported but unused (handled by isort)
+    "F401",
+    # F403: wildcard imports (handled by isort)
+    "F403",
+]
+exclude = [
+    ".git",
+    "__pycache__",
+    ".venv",
+    ".mypy_cache",
+    "build",
+    "dist",
+    ".eggs",
+    "*.egg",
+    ".tox",
+    ".pytest_cache",
+    ".coverage",
+    "htmlcov",
+]
+per-file-ignores = [
+    # Ignore specific files if needed
+    # "__init__.py:F401"
+]
+max-complexity = 10 
