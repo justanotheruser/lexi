@@ -76,6 +76,52 @@ def get_language_not_supported_message(language_code: str) -> str:
     return messages.get(language_code, messages["en"])
 
 
+def get_language_name_in_user_language(
+    target_language_code: str,
+    user_language: str,
+    supported_languages_in_user_language: dict[str, dict[str, str]],
+) -> str:
+    """
+    Get the name of a language in the user's native language
+
+    Args:
+        target_language_code: The language code to get the name for
+        user_language: The user's native language code
+        supported_languages_in_user_language: Dictionary of language names in different languages
+
+    Returns:
+        The name of the target language in the user's native language
+    """
+    if user_language in supported_languages_in_user_language:
+        return supported_languages_in_user_language[user_language].get(
+            target_language_code, target_language_code
+        )
+    return target_language_code
+
+
+def get_learning_phrase_in_target_language(target_language_code: str) -> str:
+    """
+    Get the learning phrase in the target language
+
+    Args:
+        target_language_code: The language code to get the phrase in
+
+    Returns:
+        The learning phrase in the target language
+    """
+    phrases = {
+        "en": "Let's learn English",
+        "ru": "Давайте учить русский",
+        "es": "Vamos a aprender español",
+        "it": "Impariamo l'italiano",
+        "fr": "Apprenons le français",
+        "be": "Давайце вывучаць беларускую мову",
+        "uk": "Давайте вивчати українську мову",
+    }
+
+    return phrases.get(target_language_code, f"Let's learn {target_language_code}")
+
+
 def find_best_language_match(
     user_input: str,
     supported_languages: dict[str, str],

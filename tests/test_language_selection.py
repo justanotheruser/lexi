@@ -7,7 +7,9 @@ from app.settings import get_settings
 from app.utils.language import (
     find_best_language_match,
     get_language_confirmation_message,
+    get_language_name_in_user_language,
     get_language_not_supported_message,
+    get_learning_phrase_in_target_language,
     get_user_language_message,
 )
 
@@ -73,6 +75,46 @@ def test_language_selection():
         print(
             f"{status} Input: '{user_input}' -> Expected: {expected_code}, Got: {result}, Confidence: {confidence}"
         )
+
+    print("\n=== Testing Language Names in User Language ===")
+
+    # Test language names in different user languages
+    test_language_names = [
+        ("en", "fr", "French"),
+        ("ru", "fr", "Французский"),
+        ("es", "fr", "Francés"),
+        ("it", "fr", "Francese"),
+        ("fr", "fr", "Français"),
+        ("be", "fr", "Французская"),
+        ("uk", "fr", "Французька"),
+    ]
+
+    for user_lang, target_lang, expected_name in test_language_names:
+        result = get_language_name_in_user_language(
+            target_lang, user_lang, cfg.language.supported_languages_in_user_language
+        )
+        status = "✅ PASS" if result == expected_name else "❌ FAIL"
+        print(
+            f"{status} User: {user_lang}, Target: {target_lang} -> Expected: {expected_name}, Got: {result}"
+        )
+
+    print("\n=== Testing Learning Phrases ===")
+
+    # Test learning phrases in target languages
+    test_learning_phrases = [
+        ("en", "Let's learn English"),
+        ("ru", "Давайте учить русский"),
+        ("es", "Vamos a aprender español"),
+        ("it", "Impariamo l'italiano"),
+        ("fr", "Apprenons le français"),
+        ("be", "Давайце вывучаць беларускую мову"),
+        ("uk", "Давайте вивчати українську мову"),
+    ]
+
+    for lang_code, expected_phrase in test_learning_phrases:
+        result = get_learning_phrase_in_target_language(lang_code)
+        status = "✅ PASS" if result == expected_phrase else "❌ FAIL"
+        print(f"{status} {lang_code}: Expected: '{expected_phrase}', Got: '{result}'")
 
     print("\n=== Testing Language Messages ===")
 

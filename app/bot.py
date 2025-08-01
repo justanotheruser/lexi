@@ -9,7 +9,9 @@ from app.settings import get_settings
 from app.utils.language import (
     find_best_language_match,
     get_language_confirmation_message,
+    get_language_name_in_user_language,
     get_language_not_supported_message,
+    get_learning_phrase_in_target_language,
     get_user_language_message,
 )
 
@@ -60,9 +62,21 @@ async def handle_language_selection(message: Message) -> None:
 
     if language_code:
         # Language found - send confirmation
-        language_name = cfg.language.supported_languages[language_code]
+        # Get language name in user's native language
+        language_name_in_user_lang = get_language_name_in_user_language(
+            language_code, user_language, cfg.language.supported_languages_in_user_language
+        )
+
+        # Get confirmation message in user's language
         confirmation_message = get_language_confirmation_message(user_language)
-        response = f"✅ {confirmation_message} <b>{language_name}</b>!"
+
+        # Get learning phrase in target language
+        learning_phrase = get_learning_phrase_in_target_language(language_code)
+
+        # Combine messages
+        response = (
+            f"✅ {confirmation_message} <b>{language_name_in_user_lang}</b>!\n\n{learning_phrase}"
+        )
         await message.reply(response)
     else:
         # Language not supported
