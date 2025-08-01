@@ -3,13 +3,35 @@ Lexi - AI-Powered Language Adventure Bot
 Main FastAPI application entry point
 """
 
+import sys
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from loguru import logger
+
+from app.bot import bot, start_bot, start_listening_for_updates
+
+# Configure loguru to output to stdout
+logger.remove()
+logger.add(sys.stdout, level="INFO", format="{time} | {level} | {message}")
+
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    polling_task = await start_listening_for_updates()
+    await start_bot()
+    yield
+    if polling_task:
+        polling_task.cancel()
+    await bot.close()
+
 
 app = FastAPI(
     title="Lexi - AI Language Adventure Bot",
     description="An AI-powered bot for interactive storytelling to teach kids foreign languages",
     version="1.0.0",
+    lifespan=lifespan,
 )
 
 

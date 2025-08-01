@@ -1,0 +1,158 @@
+---
+description: aiogram Development Rules
+globs:
+alwaysApply: false
+---
+
+# aiogram 3.x Development Rules
+
+## Version and Documentation
+- Always use aiogram 3.x syntax and patterns
+- Consult official documentation at https://docs.aiogram.dev/en/v3.21.0/dispatcher/index.html and https://docs.aiogram.dev/en/v3.21.0/api/index.html
+- Follow the Router-based architecture pattern
+- Use async/await syntax for all bot operations
+
+## Import Structure
+Use proper imports for aiogram 3.x:
+```python
+from aiogram import Bot, Dispatcher, Router
+from aiogram.types import Message, BotCommand, WebhookInfo
+from aiogram.filters import Command
+from aiogram.enums import ParseMode
+```
+
+## Router-based Architecture
+Always use Router-based architecture:
+```python
+telegram_router = Router(name="telegram")
+dp = Dispatcher()
+dp.include_router(telegram_router)
+
+@telegram_router.message(commands=["command_name"])
+async def handle_command(message: Message):
+    # handler logic
+```
+
+## Message Handler Patterns
+Message handlers should use:
+- `@router.message(commands=["command"])` for command handlers
+- `@router.message()` for general message handlers
+- `@router.callback_query()` for callback query handlers
+- Always use `async def` and `await` for bot operations
+- Include proper type hints: `message: Message`
+
+## Error Handling
+Always wrap Telegram API calls in try-catch blocks:
+```python
+try:
+    await bot.send_message(chat_id, text)
+except Exception as e:
+    logger.error(f"Failed to send message: {e}")
+```
+
+## User Data Safety
+When accessing user data, always check for None:
+```python
+if message.from_user is None:
+    await message.reply("❌ Unable to get user information")
+    return
+
+user_id = message.from_user.id
+user_name = message.from_user.full_name or message.from_user.username or "Unknown"
+```
+
+## Bot Configuration
+Bot configuration should follow this pattern:
+```python
+bot = Bot(
+    token=cfg.telegram.bot_token.get_secret_value(),
+    default=DefaultBotProperties(parse_mode="HTML")
+)
+```
+
+## Command Registration
+Use BotCommand for registering commands:
+```python
+commands = [
+    BotCommand(command="/start", description="Start the bot"),
+    BotCommand(command="/help", description="Get help")
+]
+await bot.set_my_commands(commands)
+```
+
+## Response Formatting
+When sending formatted messages:
+- Use HTML parse mode for rich formatting
+- Use `<b>text</b>` for bold
+- Use `<code>text</code>` for monospace
+- Use `<i>text</i>` for italic
+- Include emojis for better UX
+
+## Webhook and Polling
+Implement both webhook and polling support:
+```python
+match cfg.telegram.mode:
+    case "polling":
+        return asyncio.create_task(dp.start_polling(bot, skip_updates=True))
+    case "webhook":
+        await set_webhook(bot)
+        return None
+```
+
+## Logging
+Always include logging for important operations:
+```python
+from loguru import logger
+
+logger.info("Bot started successfully")
+logger.error(f"Failed to process message: {e}")
+logger.debug(f"Processing command: {message.text}")
+```
+
+## Type Hints
+Always include type hints:
+```python
+async def handle_command(message: Message) -> None:
+    # handler logic
+
+async def start_bot() -> None:
+    # bot startup logic
+```
+
+## Async Patterns
+Follow async patterns:
+- Use `async def` for all handler functions
+- Use `await` for all bot API calls
+- Use `asyncio.create_task()` for background tasks
+- Handle exceptions in async context properly
+
+## Documentation Reference
+When implementing new features:
+- Check https://docs.aiogram.dev/en/v3.21.0/dispatcher/index.html for dispatcher patterns
+- Check https://docs.aiogram.dev/en/v3.21.0/api/index.html for API methods
+- Use the latest stable version (3.21.0) patterns
+- Follow the official examples and best practices
+
+## Examples
+
+### Command Handler
+```python
+@telegram_router.message(commands=["start"])
+async def handle_start(message: Message) -> None:
+    if message.from_user is None:
+        return
+    
+    await message.reply(
+        f"👋 Hello <b>{message.from_user.full_name}</b>!\n\n"
+        f"Welcome to the bot!"
+    )
+```
+
+### Callback Handler
+```python
+@telegram_router.callback_query()
+async def handle_callback(callback: CallbackQuery) -> None:
+    if callback.data == "example":
+        await callback.answer("Button clicked!")
+        await callback.message.edit_text("Updated message")
+```
