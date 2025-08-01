@@ -40,7 +40,7 @@ This devcontainer provides a complete development environment for the Lexi AI-po
    cp env.example .env
    # Edit .env with your actual API keys
    ```
-3. **Install Dependencies**: Dependencies are automatically installed when the container starts
+3. **Install Dependencies**: Poetry dependencies are automatically installed when the container starts
 4. **Start Development**: The container is ready for development!
 
 ## Environment Variables
@@ -62,21 +62,30 @@ The database is automatically initialized with the following tables:
 
 ```bash
 # Run FastAPI development server
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+poetry run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 # Run tests
-pytest
+poetry run pytest
 
 # Format code
-black .
-isort .
+poetry run black .
+poetry run isort .
 
 # Lint code
-flake8
-pylint app/
+poetry run flake8
+poetry run pylint app/
 
 # Type checking
-mypy app/
+poetry run mypy app/
+
+# Add new dependencies
+poetry add package-name
+
+# Add development dependencies
+poetry add --group dev package-name
+
+# Update dependencies
+poetry update
 ```
 
 ## Ports
@@ -100,5 +109,5 @@ mypy app/
 
 1. **Container won't start**: Check that Docker and Docker Compose are installed
 2. **Database connection issues**: Ensure the database service is running and ports are forwarded
-3. **Missing dependencies**: Run `pip install -r requirements.txt` manually
+3. **Missing dependencies**: Run `poetry install` manually
 4. **Environment variables**: Make sure `.env` file exists and contains required variables

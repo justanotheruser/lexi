@@ -5,7 +5,6 @@ RUN apt-get update && apt-get install -y \
     git \
     curl \
     wget \
-    vim \
     nano \
     build-essential \
     libpq-dev \
@@ -14,14 +13,12 @@ RUN apt-get update && apt-get install -y \
 # Set working directory
 WORKDIR /workspace
 
-# Install Python development tools
-RUN pip install --no-cache-dir --upgrade pip setuptools wheel
+# Install Poetry 2.1
+RUN pip install --no-cache-dir poetry==2.1.0
 
-# Copy requirements file (will be created later)
-COPY requirements.txt /tmp/requirements.txt
+# Configure Poetry
+RUN poetry config virtualenvs.create false
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -r /tmp/requirements.txt
 
 # Create a non-root user
 RUN useradd -m -s /bin/bash developer && \
