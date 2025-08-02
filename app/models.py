@@ -17,17 +17,8 @@ class SupportedStoryLanguage(SQLModel, table=True):
     language_code: str = Field(primary_key=True, max_length=10)
 
 
-class Language(SQLModel, table=True):
-    """Names of languages in different languages"""
-
-    __table_args__ = (PrimaryKeyConstraint("language_code", "user_language_code"),)
-
-    language_code: str = Field(max_length=10)
-    user_language_code: str = Field(max_length=10)
-    word: str = Field(max_length=40)
-
-
 class PhraseTranslation(SQLModel, table=True):
+    __tablename__ = "phrase_translation"  # type: ignore
     __table_args__ = (PrimaryKeyConstraint("language_code", "phrase_enum"),)
 
     language_code: str = Field(max_length=10, foreign_key="supported_user_language.language_code")

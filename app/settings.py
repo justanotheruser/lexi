@@ -11,8 +11,6 @@ from pydantic_settings import BaseSettings
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import Language
-
 # Load environment variables from .env file
 load_dotenv()
 
@@ -83,27 +81,3 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings():
     return Settings()
-
-
-async def load_language_data(session: AsyncSession):
-    """Load language data from database and return as dictionaries"""
-    # Get all language records
-    result = await session.execute(select(Language))
-    language_records = result.scalars().all()
-
-    supported_languages = {}
-    supported_languages_in_user_language = {}
-
-    for record in language_records:
-        # For supported_languages, we want where language_code == user_language_code
-        if record.language_code == record.user_language_code:
-            supported_languages[record.language_code] = record.word
-
-        # For supported_languages_in_user_language, group by user_language_code
-        if record.user_language_code not in supported_languages_in_user_language:
-            supported_languages_in_user_language[record.user_language_code] = {}
-        supported_languages_in_user_language[record.user_language_code][
-            record.language_code
-        ] = record.word
-
-    return supported_languages, supported_languages_in_user_language

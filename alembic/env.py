@@ -8,6 +8,7 @@ from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
+from app.features.story_creator.models import Language
 from app.features.users.models import User
 from app.models import SQLModel, SupportedStoryLanguage, SupportedUserLanguage
 from app.settings import get_settings
