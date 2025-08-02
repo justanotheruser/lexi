@@ -5,7 +5,12 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.types import BotCommand, Message, User, WebhookInfo
 from loguru import logger
 
+from app.adapters.repo.user_repo import SQLModelUserRepo
+from app.features.users.user_cache import UserCache
+from app.features.users.user_repo import UserRepo
+from app.ports.cache import Cache
 from app.settings import get_settings
+from app.telegram.middlewares import setup_cache_middlewares, setup_db_session_middleware
 from app.utils.language import (
     find_best_language_match,
     get_language_confirmation_message,
@@ -26,14 +31,17 @@ bot = Bot(
 
 
 @telegram_router.message(F.text == "/start")
-async def handle_start_command(message: Message) -> None:
+async def handle_start_command(message: Message, user_cache: UserCache, sessionmaker) -> None:
     """""Get user settings and ask user for story language selection""" ""
     tg_user: User = message.from_user  # type: ignore[assignment]
+
     if (user := await user_cache.get(tg_user.id)) is None:
-        user = await get_or_create_user(ui_language_code=tg_user.language_code)
-        await user_cache.set(user.id, user)
-        # session = await get_session()
-        # if (user := await select(User, id=tg_user.id)) is None:
+        repo = SQLModelUserRepo(sessionmaker)
+        language_code = tg_user.language_code or "en"
+        user = await repo.get_or_create_user(
+            user_id=tg_user.id, current_language_code=language_code
+        )
+        await user_cache.save(user)
 
     # Get user's language (default to English if not available)
     # user_language = message.from_user.language_code or "en"
@@ -138,5 +146,8 @@ async def set_bot_commands_menu(my_bot: Bot) -> None:
         logger.error(f"Can't set commands - {e}")
 
 
-async def start_bot():
+async def start_bot(cache: Cache, sessionmaker) -> None:
+    """Start the bot with cache middleware setup"""
+    setup_cache_middlewares(telegram_router, cache)
+    setup_db_session_middleware(telegram_router, sessionmaker)
     await set_bot_commands_menu(bot)

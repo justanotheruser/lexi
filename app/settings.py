@@ -8,6 +8,7 @@ from typing import Literal
 from dotenv import load_dotenv
 from pydantic import SecretStr
 from pydantic_settings import BaseSettings
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import Language

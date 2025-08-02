@@ -102,7 +102,7 @@ addopts = [
 asyncio_mode = "auto"
 
 [tool.pylint.messages_control]
-disable = ["C0115", "C0116"]
+disable = ["C0114", "C0115", "C0116"]
 
 [tool.pylint.master]
 ignore = ["alembic/versions"]

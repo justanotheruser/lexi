@@ -21,19 +21,3 @@ def depends(arg_name: str, arg_value: Any):
             return await handler(event, data)
 
     return AddDependencyMiddleware()
-
-
-from aiogram import BaseMiddleware
-from aiogram.types import Message
-
-DEFAULT_LANG = "en"
-
-
-class LocalizationMiddleware(BaseMiddleware):
-    async def on_pre_process_message(self, message: Message, data: dict):
-        user_id = message.from_user.id
-        # Get user's language or default
-        lang_code = user_language.get(user_id, DEFAULT_LANG)
-        # Attach translator instance to message
-        message.translator = TRANSLATORS.get(lang_code, TRANSLATORS[DEFAULT_LANG])
-        data["translator"] = message.translator  # also available in handlers

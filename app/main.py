@@ -11,6 +11,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 
 # from app.database import load_language_data
+from app.adapters.redis_cache import RedisCache
+from app.database import session_maker
 from app.settings import get_settings
 from app.telegram.bot import bot, start_bot, start_listening_for_updates
 
@@ -37,12 +39,18 @@ async def lifespan(_: FastAPI):
         settings.language.supported_languages = {}
         settings.language.supported_languages_in_user_language = {}
 
+    # Initialize Redis cache
+    settings = get_settings()
+    redis_cache = RedisCache(settings.redis_url)
+    await redis_cache.connect()
+
     polling_task = await start_listening_for_updates()
-    await start_bot()
+    await start_bot(redis_cache, session_maker)
     yield
     if polling_task:
         polling_task.cancel()
     await bot.close()
+    await redis_cache.disconnect()
 
 
 app = FastAPI(

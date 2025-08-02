@@ -1,8 +1,8 @@
 """Create user
 
-Revision ID: 96579fcb9301
+Revision ID: 1689c313cf6c
 Revises: 4886e5237828
-Create Date: 2025-08-02 09:58:05.883112
+Create Date: 2025-08-02 10:24:34.828348
 
 """
 
@@ -13,7 +13,7 @@ import sqlmodel
 
 
 # revision identifiers, used by Alembic.
-revision = "96579fcb9301"
+revision = "1689c313cf6c"
 down_revision = "4886e5237828"
 branch_labels = None
 depends_on = None
