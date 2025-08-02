@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from app.settings import get_settings
 
 settings = get_settings()
-engine = create_async_engine(settings.database_url, echo=settings.debug)
+engine = create_async_engine(settings.database_url.get_secret_value(), echo=settings.debug)
 session_maker = async_sessionmaker(
     bind=engine,
     class_=AsyncSession,
@@ -17,7 +17,7 @@ session_maker = async_sessionmaker(
 )
 
 
-async def get_session() -> AsyncGenerator[AsyncSession]:
+async def get_session() -> AsyncGenerator[AsyncSession, None]:
     """Get async database session"""
     async with session_maker() as session:
         yield session

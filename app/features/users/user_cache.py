@@ -12,7 +12,7 @@ class UserCache:
 
     async def save(self, user: User, ttl: int = 24 * 60 * 60) -> None:
         key = self.namespace + str(user.id)
-        await self._cache.set(key, json.dumps(user), ttl=ttl)
+        await self._cache.set(key, user.model_dump_json(), ttl=ttl)
 
     async def get(self, user_id: int) -> User | None:
         key = self.namespace + str(user_id)

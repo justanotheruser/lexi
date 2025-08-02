@@ -10,7 +10,7 @@ from app.features.users.user_cache import UserCache
 from app.features.users.user_repo import UserRepo
 from app.ports.cache import Cache
 from app.settings import get_settings
-from app.telegram.middlewares import setup_cache_middlewares, setup_db_session_middleware
+from app.telegram.middlewares import setup_cache_middlewares, setup_sessionmaker_middleware
 from app.utils.language import (
     find_best_language_match,
     get_language_confirmation_message,
@@ -36,7 +36,8 @@ async def handle_start_command(message: Message, user_cache: UserCache, sessionm
     tg_user: User = message.from_user  # type: ignore[assignment]
 
     if (user := await user_cache.get(tg_user.id)) is None:
-        repo = SQLModelUserRepo(sessionmaker)
+        session = sessionmaker()
+        repo = SQLModelUserRepo(session)
         language_code = tg_user.language_code or "en"
         user = await repo.get_or_create_user(
             user_id=tg_user.id, current_language_code=language_code
@@ -149,5 +150,5 @@ async def set_bot_commands_menu(my_bot: Bot) -> None:
 async def start_bot(cache: Cache, sessionmaker) -> None:
     """Start the bot with cache middleware setup"""
     setup_cache_middlewares(telegram_router, cache)
-    setup_db_session_middleware(telegram_router, sessionmaker)
+    setup_sessionmaker_middleware(telegram_router, sessionmaker)
     await set_bot_commands_menu(bot)

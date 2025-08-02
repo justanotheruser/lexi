@@ -59,9 +59,7 @@ class Settings(BaseSettings):
     telegram: TelegramSettings = TelegramSettings()
     llm: LLMSettings = LLMSettings()
     language: LanguageSettings = LanguageSettings()
-
-    # Database
-    database_url: str = "postgresql://lexi:lexi123@db:5432/lexi_dev"
+    database_url: SecretStr = SecretStr("")
 
     # Redis
     redis_url: str = "redis://redis:6379/0"

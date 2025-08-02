@@ -14,10 +14,10 @@ def setup_cache_middlewares(router: Router, cache: Cache) -> None:
     router.callback_query.middleware(user_cache_middleware)
 
 
-def setup_db_session_middleware(
+def setup_sessionmaker_middleware(
     router: Router, sessionmaker: async_sessionmaker[AsyncSession]
 ) -> None:
     """Set up database session middleware for all handlers"""
-    db_session_middleware = depends("db_session", sessionmaker)
-    router.message.middleware(db_session_middleware)
-    router.callback_query.middleware(db_session_middleware)
+    sessionmaker_middleware = depends("sessionmaker", sessionmaker)
+    router.message.middleware(sessionmaker_middleware)
+    router.callback_query.middleware(sessionmaker_middleware)
