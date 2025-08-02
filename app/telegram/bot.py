@@ -5,6 +5,7 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.types import BotCommand, WebhookInfo
 from loguru import logger
 
+from app.features.story_creator.service import StoryCreatorService
 from app.features.users.user_cache import UserCache
 from app.ports.cache import Cache
 from app.settings import get_settings
@@ -12,6 +13,7 @@ from app.telegram.middlewares import (
     setup_cache_middlewares,
     setup_i18n_middleware,
     setup_sessionmaker_middleware,
+    setup_story_creator_middleware,
 )
 
 cfg = get_settings()
@@ -22,6 +24,7 @@ dp.include_router(telegram_router)
 bot = Bot(
     token=cfg.telegram.bot_token.get_secret_value(), default=DefaultBotProperties(parse_mode="HTML")
 )
+story_creator_service = StoryCreatorService()
 
 
 async def start_listening_for_updates() -> asyncio.Task | None:
@@ -75,12 +78,13 @@ async def set_bot_commands_menu(my_bot: Bot) -> None:
 
 
 async def start_bot(cache: Cache, sessionmaker) -> None:
-    """Start the bot with cache middleware setup"""
+    """Initialize bot and setup middlewares"""
     setup_cache_middlewares(telegram_router, cache)
     setup_sessionmaker_middleware(telegram_router, sessionmaker)
-
+    await setup_story_creator_middleware(telegram_router, story_creator_service, sessionmaker)
     # Setup i18n middleware
+    # TODO: remove duplicated UserCache creation
     user_cache = UserCache(cache)
-    setup_i18n_middleware(telegram_router, user_cache, sessionmaker)
+    setup_i18n_middleware(telegram_router, user_cache)
 
     await set_bot_commands_menu(bot)

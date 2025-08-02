@@ -1,6 +1,7 @@
 from aiogram import Router
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from app.features.story_creator.service import StoryCreatorService
 from app.features.users.user_cache import UserCache
 from app.ports.cache import Cache
 from app.telegram.i18n import I18nService
@@ -31,3 +32,13 @@ def setup_i18n_middleware(router: Router, user_cache: UserCache) -> None:
     i18n_middleware = I18nMiddleware(i18n_service)
     router.message.middleware(i18n_middleware)
     router.callback_query.middleware(i18n_middleware)
+
+
+async def setup_story_creator_middleware(
+    router: Router, story_creator_service: StoryCreatorService, sessionmaker
+) -> None:
+    """Set up story creator middleware for all handlers"""
+    await story_creator_service.start(sessionmaker)
+    story_creator_middleware = depends("story_creator", story_creator_service)
+    router.message.middleware(story_creator_middleware)
+    router.callback_query.middleware(story_creator_middleware)

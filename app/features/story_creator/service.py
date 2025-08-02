@@ -1,79 +1,56 @@
-"""
-Language utilities for Lexi bot
-"""
-
-from typing import Optional, Tuple
-
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+from sqlmodel import select
 from thefuzz import fuzz
 
-
-def get_user_language_message(language_code: str) -> str:
-    """
-    Get the language selection message in the user's language
-
-    Args:
-        language_code: The user's language code (e.g., 'en', 'ru', 'es')
-
-    Returns:
-        Message asking user to select a language to learn
-    """
-    messages = {
-        "en": "What language would you like to learn?",
-        "ru": "Какой язык вы хотите изучать?",
-        "es": "¿Qué idioma te gustaría aprender?",
-        "it": "Che lingua vorresti imparare?",
-        "fr": "Quelle langue voulez-vous apprendre?",
-        "be": "Якую мову вы хочаце вывучаць?",
-        "uk": "Яку мову ви хочете вивчати?",
-    }
-
-    return messages.get(language_code, messages["en"])
+from app.features.story_creator.models import Language
 
 
-def get_language_confirmation_message(language_code: str) -> str:
-    """
-    Get the language confirmation message in the user's language
+class StoryCreatorService:
+    def __init__(self) -> None:
+        self.supported_languages: dict[str, str] = {}
+        self.supported_languages_in_user_language: dict[str, dict[str, str]] = {}
 
-    Args:
-        language_code: The user's language code (e.g., 'en', 'ru', 'es')
+    async def start(self, sessionmaker: async_sessionmaker[AsyncSession]) -> None:
+        session = sessionmaker()
+        self.supported_languages, self.supported_languages_in_user_language = (
+            await load_languages_for_language_selection(session)
+        )
 
-    Returns:
-        Message confirming language selection
-    """
-    messages = {
-        "en": "Ok, let's learn",
-        "ru": "Хорошо, давайте изучать",
-        "es": "Ok, vamos a aprender",
-        "it": "Ok, impariamo",
-        "fr": "Ok, apprenons",
-        "be": "Добра, давайце вывучаць",
-        "uk": "Добре, давайте вивчати",
-    }
-
-    return messages.get(language_code, messages["en"])
+    def find_best_language_match(
+        self, user_input: str, user_ui_language: str
+    ) -> tuple[str | None, float]:
+        return find_best_language_match(
+            user_input,
+            self.supported_languages,
+            user_ui_language,
+            self.supported_languages_in_user_language,
+        )
 
 
-def get_language_not_supported_message(language_code: str) -> str:
-    """
-    Get the language not supported message in the user's language
+async def load_languages_for_language_selection(
+    session: AsyncSession,
+) -> tuple[dict[str, str], dict[str, dict[str, str]]]:
+    """Load language data from database and return as dictionaries"""
+    # Get all language records
+    result = await session.execute(select(Language))
+    language_records = result.scalars().all()
 
-    Args:
-        language_code: The user's language code (e.g., 'en', 'ru', 'es')
+    supported_languages = {}
+    supported_languages_in_user_language = {}
 
-    Returns:
-        Message indicating language is not supported
-    """
-    messages = {
-        "en": "Language not supported. Please try again with a supported language.",
-        "ru": "Язык не поддерживается. Попробуйте снова с поддерживаемым языком.",
-        "es": "Idioma no soportado. Inténtalo de nuevo con un idioma soportado.",
-        "it": "Lingua non supportata. Riprova con una lingua supportata.",
-        "fr": "Langue non prise en charge. Veuillez réessayer avec une langue prise en charge.",
-        "be": "Мова не падтрымліваецца. Паспрабуйце зноў з падтрымліваемай мовай.",
-        "uk": "Мова не підтримується. Спробуйте ще раз з підтримуваною мовою.",
-    }
+    for record in language_records:
+        # For supported_languages, we want where language_code == user_language_code
+        if record.language_code == record.user_language_code:
+            supported_languages[record.language_code] = record.word
 
-    return messages.get(language_code, messages["en"])
+        # For supported_languages_in_user_language, group by user_language_code
+        if record.user_language_code not in supported_languages_in_user_language:
+            supported_languages_in_user_language[record.user_language_code] = {}
+        supported_languages_in_user_language[record.user_language_code][
+            record.language_code
+        ] = record.word
+
+    return supported_languages, supported_languages_in_user_language
 
 
 def get_language_name_in_user_language(
@@ -99,35 +76,12 @@ def get_language_name_in_user_language(
     return target_language_code
 
 
-def get_learning_phrase_in_target_language(target_language_code: str) -> str:
-    """
-    Get the learning phrase in the target language
-
-    Args:
-        target_language_code: The language code to get the phrase in
-
-    Returns:
-        The learning phrase in the target language
-    """
-    phrases = {
-        "en": "Let's learn English",
-        "ru": "Давайте учить русский",
-        "es": "Vamos a aprender español",
-        "it": "Impariamo l'italiano",
-        "fr": "Apprenons le français",
-        "be": "Давайце вывучаць беларускую мову",
-        "uk": "Давайте вивчати українську мову",
-    }
-
-    return phrases.get(target_language_code, f"Let's learn {target_language_code}")
-
-
 def find_best_language_match(
     user_input: str,
     supported_languages: dict[str, str],
     user_language: str = "en",
-    supported_languages_in_user_language: Optional[dict[str, dict[str, str]]] = None,
-) -> Tuple[Optional[str], float]:
+    supported_languages_in_user_language: dict[str, dict[str, str]] | None = None,
+) -> tuple[str | None, float]:
     """
     Find the best matching language from user input using fuzzy matching
 
