@@ -10,7 +10,11 @@ from app.features.users.user_cache import UserCache
 from app.features.users.user_repo import UserRepo
 from app.ports.cache import Cache
 from app.settings import get_settings
-from app.telegram.middlewares import setup_cache_middlewares, setup_sessionmaker_middleware
+from app.telegram.middlewares import (
+    setup_cache_middlewares,
+    setup_i18n_middleware,
+    setup_sessionmaker_middleware,
+)
 from app.utils.language import (
     find_best_language_match,
     get_language_confirmation_message,
@@ -31,7 +35,7 @@ bot = Bot(
 
 
 @telegram_router.message(F.text == "/start")
-async def handle_start_command(message: Message, user_cache: UserCache, sessionmaker) -> None:
+async def handle_start_command(message: Message, user_cache: UserCache, sessionmaker, i18n) -> None:
     """""Get user settings and ask user for story language selection""" ""
     tg_user: User = message.from_user  # type: ignore[assignment]
 
@@ -44,17 +48,16 @@ async def handle_start_command(message: Message, user_cache: UserCache, sessionm
         )
         await user_cache.save(user)
 
-    # Get user's language (default to English if not available)
-    # user_language = message.from_user.language_code or "en"
+    # Get welcome message in user's language (synchronous)
+    welcome_message = i18n["WELCOME"].translate()
+    language_selection_message = i18n["WHAT_LANGUAGE_YOU_WANT_LEARN"].translate()
 
-    # Get the language selection message in user's language
-    # language_message = get_user_language_message(user_language)
-
-    # await message.reply(language_message)
+    response = f"{welcome_message}\n\n{language_selection_message}"
+    await message.reply(response)
 
 
 @telegram_router.message(F.text)
-async def handle_language_selection(message: Message) -> None:
+async def handle_language_selection(message: Message, i18n) -> None:
     """Handle language selection from user input"""
     if message.from_user is None or message.text is None:
         return
@@ -79,22 +82,21 @@ async def handle_language_selection(message: Message) -> None:
             language_code, user_language, cfg.language.supported_languages_in_user_language
         )
 
-        # Get confirmation message in user's language
-        confirmation_message = get_language_confirmation_message(user_language)
+        # Get confirmation message in user's language (synchronous)
+        confirmation_message = i18n["LETS_LEARN"].translate(
+            language_name=language_name_in_user_lang
+        )
 
         # Get learning phrase in target language
         learning_phrase = get_learning_phrase_in_target_language(language_code)
 
         # Combine messages
-        response = (
-            f"✅ {confirmation_message} <b>{language_name_in_user_lang}</b>!\n\n{learning_phrase}"
-        )
+        response = f"{confirmation_message}\n\n{learning_phrase}"
         await message.reply(response)
     else:
         # Language not supported
-        error_message = get_language_not_supported_message(user_language)
-        response = f"❌ {error_message}"
-        await message.reply(response)
+        error_message = i18n["LANGUAGE_NOT_SUPPORTED"].translate()
+        await message.reply(error_message)
 
 
 async def start_listening_for_updates() -> asyncio.Task | None:
@@ -151,4 +153,9 @@ async def start_bot(cache: Cache, sessionmaker) -> None:
     """Start the bot with cache middleware setup"""
     setup_cache_middlewares(telegram_router, cache)
     setup_sessionmaker_middleware(telegram_router, sessionmaker)
+
+    # Setup i18n middleware
+    user_cache = UserCache(cache)
+    setup_i18n_middleware(telegram_router, user_cache)
+
     await set_bot_commands_menu(bot)

@@ -44,6 +44,7 @@ class LanguageSettings(BaseSettings):
     # These will be populated from database at startup
     supported_languages: dict[str, str] = {}
     supported_languages_in_user_language: dict[str, dict[str, str]] = {}
+    default_language_code: str = "en"
 
     model_config = {
         "case_sensitive": False,
