@@ -26,6 +26,26 @@ class StoryCreatorService:
             self.supported_languages_in_user_language,
         )
 
+    def get_language_name_in_user_language(
+        self,
+        target_language_code: str,
+        user_language: str,
+    ) -> str:
+        """
+        Get the name of a language in the user's UI language
+
+        Args:
+            target_language_code: The language code to get the name for
+            user_language: The user's UI language code
+        Returns:
+            The name of the target language in the user's UI language
+        """
+        if user_language in self.supported_languages_in_user_language:
+            return self.supported_languages_in_user_language[user_language].get(
+                target_language_code, target_language_code
+            )
+        return target_language_code
+
 
 async def load_languages_for_language_selection(
     session: AsyncSession,
@@ -51,29 +71,6 @@ async def load_languages_for_language_selection(
         ] = record.word
 
     return supported_languages, supported_languages_in_user_language
-
-
-def get_language_name_in_user_language(
-    target_language_code: str,
-    user_language: str,
-    supported_languages_in_user_language: dict[str, dict[str, str]],
-) -> str:
-    """
-    Get the name of a language in the user's UI language
-
-    Args:
-        target_language_code: The language code to get the name for
-        user_language: The user's UI language code
-        supported_languages_in_user_language: Dictionary of language names in different languages
-
-    Returns:
-        The name of the target language in the user's UI language
-    """
-    if user_language in supported_languages_in_user_language:
-        return supported_languages_in_user_language[user_language].get(
-            target_language_code, target_language_code
-        )
-    return target_language_code
 
 
 def find_best_language_match(
