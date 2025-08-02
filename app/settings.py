@@ -8,6 +8,9 @@ from typing import Literal
 from dotenv import load_dotenv
 from pydantic import SecretStr
 from pydantic_settings import BaseSettings
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.models import Language
 
 # Load environment variables from .env file
 load_dotenv()
@@ -37,83 +40,9 @@ class LLMSettings(BaseSettings):
 class LanguageSettings(BaseSettings):
     """Language configuration settings"""
 
-    # Supported languages with their codes and display names
-    supported_languages: dict[str, str] = {
-        "en": "English",
-        "ru": "Russian",
-        "es": "Spanish",
-        "it": "Italian",
-        "fr": "French",
-        "be": "Беларусский",
-        "uk": "Украинский",
-    }
-
-    # Language names in different languages for fuzzy matching
-    supported_languages_in_user_language: dict[str, dict[str, str]] = {
-        "en": {
-            "en": "English",
-            "ru": "Russian",
-            "es": "Spanish",
-            "it": "Italian",
-            "fr": "French",
-            "be": "Belarusian",
-            "uk": "Ukrainian",
-        },
-        "ru": {
-            "en": "Английский",
-            "ru": "Русский",
-            "es": "Испанский",
-            "it": "Итальянский",
-            "fr": "Французский",
-            "be": "Беларусский",
-            "uk": "Украинский",
-        },
-        "es": {
-            "en": "Inglés",
-            "ru": "Ruso",
-            "es": "Español",
-            "it": "Italiano",
-            "fr": "Francés",
-            "be": "Bielorruso",
-            "uk": "Ucraniano",
-        },
-        "it": {
-            "en": "Inglese",
-            "ru": "Russo",
-            "es": "Spagnolo",
-            "it": "Italiano",
-            "fr": "Francese",
-            "be": "Bielorusso",
-            "uk": "Ucraino",
-        },
-        "fr": {
-            "en": "Anglais",
-            "ru": "Russe",
-            "es": "Espagnol",
-            "it": "Italien",
-            "fr": "Français",
-            "be": "Biélorusse",
-            "uk": "Ukrainien",
-        },
-        "be": {
-            "en": "Англійская",
-            "ru": "Руская",
-            "es": "Іспанская",
-            "it": "Італьянская",
-            "fr": "Французская",
-            "be": "Беларуская",
-            "uk": "Украінская",
-        },
-        "uk": {
-            "en": "Англійська",
-            "ru": "Російська",
-            "es": "Іспанська",
-            "it": "Італійська",
-            "fr": "Французька",
-            "be": "Білоруська",
-            "uk": "Українська",
-        },
-    }
+    # These will be populated from database at startup
+    supported_languages: dict[str, str] = {}
+    supported_languages_in_user_language: dict[str, dict[str, str]] = {}
 
     model_config = {
         "case_sensitive": False,
@@ -154,3 +83,27 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings():
     return Settings()
+
+
+async def load_language_data(session: AsyncSession):
+    """Load language data from database and return as dictionaries"""
+    # Get all language records
+    result = await session.execute(select(Language))
+    language_records = result.scalars().all()
+
+    supported_languages = {}
+    supported_languages_in_user_language = {}
+
+    for record in language_records:
+        # For supported_languages, we want where language_code == user_language_code
+        if record.language_code == record.user_language_code:
+            supported_languages[record.language_code] = record.word
+
+        # For supported_languages_in_user_language, group by user_language_code
+        if record.user_language_code not in supported_languages_in_user_language:
+            supported_languages_in_user_language[record.user_language_code] = {}
+        supported_languages_in_user_language[record.user_language_code][
+            record.language_code
+        ] = record.word
+
+    return supported_languages, supported_languages_in_user_language

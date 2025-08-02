@@ -2,7 +2,7 @@ import asyncio
 
 from aiogram import Bot, Dispatcher, F, Router
 from aiogram.client.default import DefaultBotProperties
-from aiogram.types import BotCommand, Message, WebhookInfo
+from aiogram.types import BotCommand, Message, User, WebhookInfo
 from loguru import logger
 
 from app.settings import get_settings
@@ -27,18 +27,21 @@ bot = Bot(
 
 @telegram_router.message(F.text == "/start")
 async def handle_start_command(message: Message) -> None:
-    """Handle /start command and ask user for language selection"""
-    if message.from_user is None:
-        await message.reply("❌ Unable to get user information")
-        return
+    """""Get user settings and ask user for story language selection""" ""
+    tg_user: User = message.from_user  # type: ignore[assignment]
+    if (user := await user_cache.get(tg_user.id)) is None:
+        user = await get_or_create_user(ui_language_code=tg_user.language_code)
+        await user_cache.set(user.id, user)
+        # session = await get_session()
+        # if (user := await select(User, id=tg_user.id)) is None:
 
     # Get user's language (default to English if not available)
-    user_language = message.from_user.language_code or "en"
+    # user_language = message.from_user.language_code or "en"
 
     # Get the language selection message in user's language
-    language_message = get_user_language_message(user_language)
+    # language_message = get_user_language_message(user_language)
 
-    await message.reply(language_message)
+    # await message.reply(language_message)
 
 
 @telegram_router.message(F.text)

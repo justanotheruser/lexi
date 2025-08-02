@@ -10,7 +10,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 
-from app.bot import bot, start_bot, start_listening_for_updates
+# from app.database import load_language_data
+from app.settings import get_settings
+from app.telegram.bot import bot, start_bot, start_listening_for_updates
 
 # Configure loguru to output to stdout
 logger.remove()
@@ -19,6 +21,22 @@ logger.add(sys.stdout, level="INFO", format="{time} | {level} | {message}")
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
+    # Load language data from database
+    try:
+        # supported_languages, supported_languages_in_user_language = await load_language_data()
+        # settings = get_settings()
+        # settings.language.supported_languages = supported_languages
+        # settings.language.supported_languages_in_user_language = (
+        #    supported_languages_in_user_language
+        # )
+        logger.info("Language data loaded from database successfully")
+    except Exception as e:
+        logger.error(f"Failed to load language data from database: {e}")
+        # Fallback to empty dictionaries if database is not available
+        settings = get_settings()
+        settings.language.supported_languages = {}
+        settings.language.supported_languages_in_user_language = {}
+
     polling_task = await start_listening_for_updates()
     await start_bot()
     yield

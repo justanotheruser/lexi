@@ -1,0 +1,6 @@
+from typing import Any, Protocol
+
+
+class Cache(Protocol):
+    async def set(self, key, value) -> None: ...
+    async def get(self, key, value) -> Any: ...
