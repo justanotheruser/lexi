@@ -2,7 +2,7 @@
 Database models for Lexi bot
 """
 
-from sqlmodel import Field, PrimaryKeyConstraint, SQLModel
+from sqlmodel import Field, PrimaryKeyConstraint, SQLModel, Text
 
 
 class SupportedUserLanguage(SQLModel, table=True):
@@ -25,3 +25,11 @@ class Language(SQLModel, table=True):
     language_code: str = Field(max_length=10)
     user_language_code: str = Field(max_length=10)
     word: str = Field(max_length=40)
+
+
+class PhraseTranslation(SQLModel, table=True):
+    __table_args__ = (PrimaryKeyConstraint("language_code", "phrase_enum"),)
+
+    language_code: str = Field(max_length=10, foreign_key="supported_user_language.language_code")
+    phrase_enum: str = Field(sa_type=Text)
+    translation: str = Field(sa_type=Text)

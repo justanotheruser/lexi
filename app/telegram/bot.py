@@ -10,6 +10,7 @@ from app.features.users.user_cache import UserCache
 from app.features.users.user_repo import UserRepo
 from app.ports.cache import Cache
 from app.settings import get_settings
+from app.telegram.i18n import I18nManager
 from app.telegram.middlewares import (
     setup_cache_middlewares,
     setup_i18n_middleware,
@@ -35,7 +36,9 @@ bot = Bot(
 
 
 @telegram_router.message(F.text == "/start")
-async def handle_start_command(message: Message, user_cache: UserCache, sessionmaker, i18n) -> None:
+async def handle_start_command(
+    message: Message, user_cache: UserCache, sessionmaker, i18n: I18nManager
+) -> None:
     """""Get user settings and ask user for story language selection""" ""
     tg_user: User = message.from_user  # type: ignore[assignment]
 
@@ -57,21 +60,16 @@ async def handle_start_command(message: Message, user_cache: UserCache, sessionm
 
 
 @telegram_router.message(F.text)
-async def handle_language_selection(message: Message, i18n) -> None:
+async def handle_language_selection(message: Message, i18n: I18nManager) -> None:
     """Handle language selection from user input"""
     if message.from_user is None or message.text is None:
         return
-
     user_input = message.text.strip()
-
-    # Get user's language for localized messages
-    user_language = message.from_user.language_code or "en"
-
     # Find the best matching language
-    language_code, confidence = find_best_language_match(
+    language_code, _ = find_best_language_match(
         user_input,
         cfg.language.supported_languages,
-        user_language,
+        i18n.language,
         cfg.language.supported_languages_in_user_language,
     )
 
@@ -79,7 +77,7 @@ async def handle_language_selection(message: Message, i18n) -> None:
         # Language found - send confirmation
         # Get language name in user's native language
         language_name_in_user_lang = get_language_name_in_user_language(
-            language_code, user_language, cfg.language.supported_languages_in_user_language
+            language_code, i18n.language, cfg.language.supported_languages_in_user_language
         )
 
         # Get confirmation message in user's language (synchronous)

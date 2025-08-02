@@ -82,15 +82,15 @@ def get_language_name_in_user_language(
     supported_languages_in_user_language: dict[str, dict[str, str]],
 ) -> str:
     """
-    Get the name of a language in the user's native language
+    Get the name of a language in the user's UI language
 
     Args:
         target_language_code: The language code to get the name for
-        user_language: The user's native language code
+        user_language: The user's UI language code
         supported_languages_in_user_language: Dictionary of language names in different languages
 
     Returns:
-        The name of the target language in the user's native language
+        The name of the target language in the user's UI language
     """
     if user_language in supported_languages_in_user_language:
         return supported_languages_in_user_language[user_language].get(
@@ -134,7 +134,7 @@ def find_best_language_match(
     Args:
         user_input: User's language input
         supported_languages: Dictionary of language codes to display names
-        user_language: User's native language code
+        user_language: User's UI language code
         supported_languages_in_user_language: Dictionary of language names in different languages
 
     Returns:
@@ -147,7 +147,7 @@ def find_best_language_match(
     best_match = None
     best_score = 0.0
 
-    # Get language names in user's native language
+    # Get language names in user's UI language
     user_language_names = {}
     if (
         supported_languages_in_user_language
@@ -184,7 +184,7 @@ def find_best_language_match(
             best_score = current_score
             best_match = code
 
-    # Also check against language names in user's native language
+    # Also check against language names in user's UI language
     for code, name in user_language_names.items():
         # Check against language name in user's language
         name_score = fuzz.ratio(user_input_lower, name.lower())

@@ -40,6 +40,7 @@ class I18nManager:
     """Provides dict-like interface for translating phrases"""
 
     def __init__(self, translator: Translator) -> None:
+        self.language = translator.language
         self._translator = translator
 
     def __getitem__(self, key: Phrase) -> "TranslatableKey":
