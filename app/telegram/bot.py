@@ -2,6 +2,7 @@ import asyncio
 
 from aiogram import Bot, Dispatcher, Router
 from aiogram.client.default import DefaultBotProperties
+from aiogram.fsm.storage.redis import RedisStorage
 from aiogram.types import BotCommand, WebhookInfo
 from loguru import logger
 
@@ -9,6 +10,8 @@ from app.features.story_creator.service import StoryCreatorService
 from app.features.users.user_cache import UserCache
 from app.ports.cache import Cache
 from app.settings import get_settings
+from app.telegram.handlers.start import start_router
+from app.telegram.handlers.story_creation import story_creation_router
 from app.telegram.middlewares import (
     setup_cache_middlewares,
     setup_i18n_middleware,
@@ -18,9 +21,10 @@ from app.telegram.middlewares import (
 
 cfg = get_settings()
 
-telegram_router = Router(name="telegram")
+
 dp = Dispatcher()
-dp.include_router(telegram_router)
+dp.include_router(start_router)
+dp.include_router(story_creation_router)
 bot = Bot(
     token=cfg.telegram.bot_token.get_secret_value(), default=DefaultBotProperties(parse_mode="HTML")
 )
@@ -79,12 +83,20 @@ async def set_bot_commands_menu(my_bot: Bot) -> None:
 
 async def start_bot(cache: Cache, sessionmaker) -> None:
     """Initialize bot and setup middlewares"""
-    setup_cache_middlewares(telegram_router, cache)
-    setup_sessionmaker_middleware(telegram_router, sessionmaker)
-    await setup_story_creator_middleware(telegram_router, story_creator_service, sessionmaker)
+    # Set up FSM storage with Redis
+    storage = RedisStorage.from_url(cfg.redis_url)
+    dp.fsm.storage = storage
+
+    setup_cache_middlewares(start_router, cache)
+    setup_cache_middlewares(story_creation_router, cache)
+    setup_sessionmaker_middleware(start_router, sessionmaker)
+    setup_sessionmaker_middleware(story_creation_router, sessionmaker)
+    await setup_story_creator_middleware(story_creation_router, story_creator_service, sessionmaker)
+
     # Setup i18n middleware
     # TODO: remove duplicated UserCache creation
     user_cache = UserCache(cache)
-    setup_i18n_middleware(telegram_router, user_cache)
+    await setup_i18n_middleware(start_router, user_cache, sessionmaker)
+    await setup_i18n_middleware(story_creation_router, user_cache, sessionmaker)
 
     await set_bot_commands_menu(bot)

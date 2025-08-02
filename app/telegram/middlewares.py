@@ -26,9 +26,16 @@ def setup_sessionmaker_middleware(
     router.callback_query.middleware(sessionmaker_middleware)
 
 
-def setup_i18n_middleware(router: Router, user_cache: UserCache) -> None:
+async def setup_i18n_middleware(
+    router: Router, user_cache: UserCache, sessionmaker: async_sessionmaker[AsyncSession]
+) -> None:
     """Set up i18n middleware for all handlers"""
     i18n_service = I18nService(user_cache)
+
+    # Load phrases from database during setup
+    async with sessionmaker() as session:
+        await i18n_service.load_translators_from_db(session)
+
     i18n_middleware = I18nMiddleware(i18n_service)
     router.message.middleware(i18n_middleware)
     router.callback_query.middleware(i18n_middleware)

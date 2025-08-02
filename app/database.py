@@ -21,3 +21,8 @@ async def get_session() -> AsyncGenerator[AsyncSession, None]:
     """Get async database session"""
     async with session_maker() as session:
         yield session
+
+
+async def close_database_connections() -> None:
+    """Close all database connections"""
+    await engine.dispose()

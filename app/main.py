@@ -12,7 +12,7 @@ from loguru import logger
 
 # from app.database import load_language_data
 from app.adapters.redis_cache import RedisCache
-from app.database import session_maker
+from app.database import close_database_connections, session_maker
 from app.settings import get_settings
 from app.telegram.bot import bot, start_bot, start_listening_for_updates
 
@@ -51,6 +51,7 @@ async def lifespan(_: FastAPI):
         polling_task.cancel()
     await bot.close()
     await redis_cache.disconnect()
+    await close_database_connections()
 
 
 app = FastAPI(

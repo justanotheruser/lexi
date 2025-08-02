@@ -11,10 +11,10 @@ class StoryCreatorService:
         self.supported_languages_in_user_language: dict[str, dict[str, str]] = {}
 
     async def start(self, sessionmaker: async_sessionmaker[AsyncSession]) -> None:
-        session = sessionmaker()
-        self.supported_languages, self.supported_languages_in_user_language = (
-            await load_languages_for_language_selection(session)
-        )
+        async with sessionmaker() as session:
+            self.supported_languages, self.supported_languages_in_user_language = (
+                await load_languages_for_language_selection(session)
+            )
 
     def find_best_language_match(
         self, user_input: str, user_ui_language: str
