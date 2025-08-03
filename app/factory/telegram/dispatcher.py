@@ -10,13 +10,11 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.config import AppConfig, Assets
 from app.factory.redis import create_redis
-
-# from app.factory.services import create_services
+from app.factory.services import create_services
 from app.factory.session_pool import create_session_pool
 from app.factory.telegram.i18n import create_i18n_middleware
-
-# from app.telegram.handlers import admin, extra, main
-# from app.telegram.middlewares import MessageHelperMiddleware, UserMiddleware
+from app.telegram.handlers import admin, extra, main
+from app.telegram.middlewares import MessageHelperMiddleware, UserMiddleware
 from app.utils import mjson
 
 
@@ -37,20 +35,20 @@ def create_dispatcher(config: AppConfig) -> Dispatcher:
             json_dumps=mjson.encode,
         ),
         config=config,
-        # assets=Assets(),
+        assets=Assets(),
         session_pool=session_pool,
         redis=redis,
-        # **create_services(
-        #     session_pool=session_pool,
-        #     redis=redis,
-        #     config=config,
-        # ),
+        **create_services(
+            session_pool=session_pool,
+            redis=redis,
+            config=config,
+        ),
     )
 
-    # dispatcher.include_routers(admin.router, main.router, extra.router)
-    # dispatcher.update.outer_middleware(UserMiddleware())
-    # i18n_middleware.setup(dispatcher=dispatcher)
-    # dispatcher.update.outer_middleware(MessageHelperMiddleware())
+    dispatcher.include_routers(admin.router, main.router, extra.router)
+    dispatcher.update.outer_middleware(UserMiddleware())
+    i18n_middleware.setup(dispatcher=dispatcher)
+    dispatcher.update.outer_middleware(MessageHelperMiddleware())
     dispatcher.callback_query.middleware(CallbackAnswerMiddleware())
 
     return dispatcher

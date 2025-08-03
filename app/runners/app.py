@@ -17,13 +17,14 @@ from app.runners.polling import polling_lifespan, polling_startup
 from app.runners.webhook import webhook_shutdown, webhook_startup
 
 if TYPE_CHECKING:
-    from app.models.config import AppConfig
+    from app.config import AppConfig
 
 
-# noinspection PyProtectedMember
 def handle_sigterm(*_: Any, app: FastAPI) -> None:
     if app.state.is_polling:
-        app.state.dispatcher._signal_stop_polling(sig=signal.SIGTERM)
+        app.state.dispatcher._signal_stop_polling(  # pylint: disable=protected-access
+            sig=signal.SIGTERM
+        )
         app.state.shutdown_completed = True
     else:
         asyncio.create_task(emit_aiogram_shutdown(app=app))

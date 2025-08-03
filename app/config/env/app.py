@@ -1,4 +1,3 @@
-from pydantic import BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from app.const import ENV_FILE
@@ -23,5 +22,5 @@ class AppConfig(BaseSettings):
     postgres: PostgresConfig
     sql_alchemy: SQLAlchemyConfig = SQLAlchemyConfig()
     redis: RedisConfig
-    # server: ServerConfig
+    server: ServerConfig
     common: CommonConfig
