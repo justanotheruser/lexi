@@ -29,7 +29,7 @@ class UserService(CrudService):
             language_code=aiogram_user.language_code,
         )
 
-        async with SQLSessionContext(session_pool=self.session_pool) as (repository, uow):
+        async with SQLSessionContext(session_pool=self.session_pool) as (_, uow):
             await uow.commit(db_user)
 
         await self.clear_cache(user_id=aiogram_user.id)
@@ -37,20 +37,20 @@ class UserService(CrudService):
 
     @redis_cache(prefix="get_user", ttl=TIME_1M)
     async def get(self, user_id: int) -> Optional[UserDto]:
-        async with SQLSessionContext(session_pool=self.session_pool) as (repository, uow):
+        async with SQLSessionContext(session_pool=self.session_pool) as (repository, _):
             user = await repository.users.get(user_id=user_id)
             if user is None:
                 return None
             return user.dto()
 
     async def count(self) -> int:
-        async with SQLSessionContext(session_pool=self.session_pool) as (repository, uow):
+        async with SQLSessionContext(session_pool=self.session_pool) as (repository, _):
             return await repository.users.count()
 
     async def update(self, user: UserDto, **data: Any) -> Optional[UserDto]:
         if "language_code" in data and data["language_code"] not in self.config.telegram.locales:
             return None
-        async with SQLSessionContext(session_pool=self.session_pool) as (repository, uow):
+        async with SQLSessionContext(session_pool=self.session_pool) as (repository, _):
             for key, value in data.items():
                 setattr(user, key, value)
             await self.clear_cache(user_id=user.id)

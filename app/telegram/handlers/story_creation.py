@@ -1,16 +1,17 @@
 from __future__ import annotations
 
-import json
+import logging
 from typing import TYPE_CHECKING, Any, Final
 
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
-from aiogram.types import CallbackQuery, Message, TelegramObject
+from aiogram.types import CallbackQuery, Message
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram_i18n import I18nContext
+from pydantic import ValidationError
 
-from app.models.dto.story import StoryParams
+from app.models.dto.story_creation_params import StoryCreationParams
 from app.services.story_teller import StoryTellerService
 from app.telegram.keyboards.callback_data.menu import CDMenu, CDStoryBack, CDStoryLanguageSelect
 from app.telegram.keyboards.callback_data.story import CDStoryChoice, CDVocabularyWord
@@ -30,6 +31,7 @@ class StoryCreationStates(StatesGroup):
 
 
 router: Final[Router] = Router(name="story_creation")
+logger: Final[logging.Logger] = logging.getLogger(__name__)
 
 
 @router.callback_query(CDStoryLanguageSelect.filter())
@@ -98,50 +100,35 @@ async def handle_setting_input(
     message: Message,
     state: FSMContext,
     i18n: I18nContext,
-    config: AppConfig,
     story_teller: StoryTellerService,
 ) -> Any:
     """Handle setting definition input"""
-    if not message.text:
+    if not message.text or not message.from_user:
         return
 
+    # TODO: validate user input
     user_input = message.text.strip()
 
-    # Store setting
     await state.update_data(setting=user_input)
-
-    # Get all story parameters
     data = await state.get_data()
 
-    # Create story parameters JSON
-    story_params = {
-        "target_language_code": data.get("target_language_code"),
-        "protagonist": data.get("protagonist"),
-        "setting": data.get("setting"),
-    }
-
-    # Send confirmation
-    confirmation_text = i18n.messages.story_setup_complete()
-
-    await message.reply(confirmation_text)
-
-    # Start the story immediately
-    if not message.from_user:
+    try:
+        story_creation_params = StoryCreationParams(
+            target_language_code=data["target_language_code"],
+            protagonist=data["protagonist"],
+            setting=data["setting"],
+            native_language_code=i18n.locale,
+        )
+    except (ValidationError, KeyError) as e:
+        logger.error("Story creation failed: %s", e)
+        await message.reply(i18n.messages.invalid_input())
         return
 
-    # Get user's native language (default to English if not available)
-    native_language = message.from_user.language_code or "en"
-
-    # Create story parameters
-    story_params_obj = StoryParams(
-        target_language_code=str(story_params["target_language_code"]),
-        protagonist=str(story_params["protagonist"]),
-        setting=str(story_params["setting"]),
-        native_language_code=native_language,
-    )
+    confirmation_text = i18n.messages.story_setup_complete()
+    await message.reply(confirmation_text)
 
     # Create story session
-    session = await story_teller.create_story_session(message.from_user.id, story_params_obj)
+    session = await story_teller.create_story_session(message.from_user.id, story_creation_params)
 
     # Generate initial story
     story_bit = await story_teller.generate_initial_story(session)

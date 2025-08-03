@@ -1,16 +1,18 @@
 from datetime import datetime
-from typing import List, Optional
 
 from pydantic import BaseModel
 
 
 class StoryParams(BaseModel):
-    """Story parameters for story creation"""
+    """Complete story parameters for story creation"""
 
     target_language_code: str
     protagonist: str
     setting: str
     native_language_code: str
+    openai_model: str
+    max_tokens: int
+    temperature: float
 
 
 class StorySession(BaseModel):
@@ -19,8 +21,8 @@ class StorySession(BaseModel):
     user_id: int
     params: StoryParams
     story_text: str = ""
-    choices: List[str] = []
-    key_words: List[str] = []
+    choices: list[str] = []
+    key_words: list[str] = []
     turn_count: int = 0
     created_at: datetime
     last_updated: datetime
@@ -46,5 +48,5 @@ class StoryBit(BaseModel):
     """A single story bit with text and choices"""
 
     text: str
-    choices: List[StoryChoice]
-    key_words: List[str]
+    choices: list[StoryChoice]
+    key_words: list[str]

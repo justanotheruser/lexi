@@ -1,0 +1,10 @@
+---
+description: Rule for type hints
+globs:
+alwaysApply: true
+---
+
+# Python typing rules
+
+- Don't use `Optional` -> use `| None` instead
+- Don't use `List`, `Tuple`, `Dict` or `Set` -> use `list`, `tuple`, `dict`, `set`

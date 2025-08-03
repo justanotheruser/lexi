@@ -1,16 +1,14 @@
 from __future__ import annotations
 
-import json
 import logging
 import re
-import uuid
-from datetime import datetime
-from typing import TYPE_CHECKING, Any, Final, List, Optional, Tuple
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING, Final, List, Optional, Tuple
 
-import httpx
 from openai import AsyncOpenAI
 
 from app.models.dto.story import StoryBit, StoryChoice, StoryParams, StorySession, VocabularyWord
+from app.models.dto.story_creation_params import StoryCreationParams
 from app.prompts import (
     get_continue_story_prompt,
     get_initial_story_prompt,
@@ -19,7 +17,6 @@ from app.prompts import (
 )
 from app.services.base import BaseService
 from app.services.redis.repository import RedisRepository
-from app.utils import mjson
 from app.utils.key_builder import StorageKey
 
 if TYPE_CHECKING:
@@ -46,7 +43,7 @@ class StoryTellerService(BaseService):
         self.config = config
         self.redis_repo = redis_repo
         self.openai_client = AsyncOpenAI(
-            api_key=config.story_teller.openai_api_key.get_secret_value()
+            api_key=config.story_teller.openai.api_key.get_secret_value()
         )
 
     def _get_story_session_key(self, user_id: int) -> StorageKey:
@@ -64,14 +61,24 @@ class StoryTellerService(BaseService):
     async def create_story_session(
         self,
         user_id: int,
-        params: StoryParams,
+        params: StoryCreationParams,
     ) -> StorySession:
         """Create a new story session"""
+        story_params = StoryParams(
+            target_language_code=params.target_language_code,
+            native_language_code=params.native_language_code,
+            protagonist=params.protagonist,
+            setting=params.setting,
+            openai_model=self.config.story_teller.openai.model,
+            max_tokens=self.config.story_teller.openai.max_tokens,
+            temperature=self.config.story_teller.openai.temperature,
+        )
+
         session = StorySession(
             user_id=user_id,
-            params=params,
-            created_at=datetime.utcnow(),
-            last_updated=datetime.utcnow(),
+            params=story_params,
+            created_at=datetime.now(UTC),
+            last_updated=datetime.now(UTC),
         )
 
         key = self._get_story_session_key(user_id)
@@ -105,10 +112,10 @@ class StoryTellerService(BaseService):
         )
 
         response = await self.openai_client.chat.completions.create(
-            model="gpt-4o-mini",
+            model=session.params.openai_model,
             messages=[{"role": "user", "content": prompt}],
-            max_tokens=300,
-            temperature=0.8,
+            max_tokens=session.params.max_tokens,
+            temperature=session.params.temperature,
         )
 
         content = response.choices[0].message.content or ""
@@ -156,10 +163,10 @@ class StoryTellerService(BaseService):
             )
 
         response = await self.openai_client.chat.completions.create(
-            model="gpt-4o-mini",
+            model=session.params.openai_model,
             messages=[{"role": "user", "content": prompt}],
-            max_tokens=400,
-            temperature=0.8,
+            max_tokens=session.params.max_tokens,
+            temperature=session.params.temperature,
         )
 
         content = response.choices[0].message.content or ""
