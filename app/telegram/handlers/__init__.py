@@ -1,3 +1,3 @@
-from . import admin, extra, main, story_creation
+from . import admin, extra, main, story_creation, story_dialog
 
-__all__ = ["admin", "extra", "main", "story_creation"]
+__all__ = ["admin", "extra", "main", "story_creation", "story_dialog"]

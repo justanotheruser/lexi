@@ -115,10 +115,13 @@ async def handle_setting_input(
         "setting": data.get("setting"),
     }
 
-    # Send confirmation with JSON
-    json_text = f"```json\n{json.dumps(story_params, indent=2)}\n```"
+    # Send confirmation and start story
+    confirmation_text = i18n.messages.story_setup_complete()
+    start_story_text = i18n.messages.start_story_command()
 
-    await message.reply(json_text)
+    response_text = f"{confirmation_text}\n\n{start_story_text}"
+
+    await message.reply(response_text)
 
     # Clear the FSM state
     await state.clear()
