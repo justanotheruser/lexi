@@ -3,16 +3,14 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any, Final
 
-from aiogram import F, Router
+from aiogram import Router
 from aiogram.fsm.context import FSMContext
-from aiogram.types import CallbackQuery, Message
+from aiogram.types import CallbackQuery
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram_i18n import I18nContext
 
-from app.models.dto.story import StoryParams
 from app.services.story_teller import StoryTellerService
 from app.telegram.keyboards.callback_data.story import CDStoryChoice, CDStoryEnd, CDVocabularyWord
-from app.telegram.keyboards.common import back_keyboard
 
 if TYPE_CHECKING:
     from app.config import AppConfig
@@ -79,7 +77,7 @@ async def handle_story_choice(
         # Arrange buttons
         keyboard_builder.adjust(1, len(story_bit.key_words))
 
-        await callback.message.edit_text(
+        await callback.message.edit_text(  # type: ignore
             text=formatted_text,
             reply_markup=keyboard_builder.as_markup(),
         )
@@ -157,7 +155,7 @@ async def handle_story_end(
     keyboard_builder = InlineKeyboardBuilder()
     keyboard_builder.button(text=i18n.buttons.back_to_menu(), callback_data="menu")
 
-    await callback.message.edit_text(
+    await callback.message.edit_text(  # type: ignore
         text=completion_text,
         reply_markup=keyboard_builder.as_markup(),
     )

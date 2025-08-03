@@ -3,6 +3,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from app.const import ENV_FILE
 
 from .common import CommonConfig
+from .content_moderation import ContentModerationConfig
 from .postgres import PostgresConfig
 from .redis import RedisConfig
 from .server import ServerConfig
@@ -26,3 +27,4 @@ class AppConfig(BaseSettings):
     server: ServerConfig
     common: CommonConfig
     story_teller: StoryTellerConfig
+    content_moderation: ContentModerationConfig = ContentModerationConfig()

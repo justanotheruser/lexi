@@ -1,7 +1,5 @@
 """Story generation prompts for Lexi bot"""
 
-from typing import List
-
 
 def get_initial_story_prompt(
     target_language: str,

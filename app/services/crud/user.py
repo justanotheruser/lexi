@@ -53,8 +53,10 @@ class UserService(CrudService):
         async with SQLSessionContext(session_pool=self.session_pool) as (repository, _):
             for key, value in data.items():
                 setattr(user, key, value)
-            await self.clear_cache(user_id=user.id)
             user_db = await repository.users.update(user_id=user.id, **user.model_state)
             if user_db is None:
+                await self.clear_cache(user_id=user.id)
                 return None
-            return user_db.dto()
+            updated_user = user_db.dto()
+            await self.clear_cache(user_id=user.id)
+            return updated_user

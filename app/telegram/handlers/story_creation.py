@@ -11,9 +11,14 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram_i18n import I18nContext
 from pydantic import ValidationError
 
-from app.models.dto.story_creation_params import StoryCreationParams
+from app.services.story_creator import ContentModerationError, StoryCreatorService
 from app.services.story_teller import StoryTellerService
-from app.telegram.keyboards.callback_data.menu import CDMenu, CDStoryBack, CDStoryLanguageSelect
+from app.telegram.keyboards.callback_data.menu import (
+    CDCreateStory,
+    CDMenu,
+    CDStoryBack,
+    CDStoryLanguageSelect,
+)
 from app.telegram.keyboards.callback_data.story import CDStoryChoice, CDVocabularyWord
 from app.telegram.keyboards.common import back_keyboard
 
@@ -34,12 +39,37 @@ router: Final[Router] = Router(name="story_creation")
 logger: Final[logging.Logger] = logging.getLogger(__name__)
 
 
+@router.callback_query(CDCreateStory.filter())
+async def create_story(
+    callback: CallbackQuery,
+    i18n: I18nContext,
+    state: FSMContext,
+    story_creator: StoryCreatorService,
+) -> Any:
+    """Start story creation flow"""
+    default_language = await story_creator.get_default_language_for_user(callback.from_user.id)
+    if default_language is None:
+        # Set initial state
+        await state.set_state(StoryCreationStates.selecting_language)
+        # Show language selection
+        await show_language_selection(callback, i18n, story_creator.get_available_languages())
+    else:
+        await state.update_data(target_language_code=default_language)
+        await state.set_state(StoryCreationStates.defining_protagonist)
+        if callback.message:
+            await callback.message.edit_text(  # type: ignore
+                text=i18n.messages.define_protagonist(),
+                reply_markup=back_keyboard(i18n=i18n, data=CDStoryBack()),
+            )
+        await state.set_state(StoryCreationStates.defining_protagonist)
+
+
 @router.callback_query(CDStoryLanguageSelect.filter())
 async def handle_story_language_selection(
     callback: CallbackQuery,
     state: FSMContext,
     i18n: I18nContext,
-    config: AppConfig,
+    story_creator: StoryCreatorService,
 ) -> Any:
     """Handle story language selection from inline keyboard"""
     if not callback.data:
@@ -48,7 +78,7 @@ async def handle_story_language_selection(
     # Extract language code from callback data
     language_code = callback.data.split(":")[1] if ":" in callback.data else None
 
-    if not language_code or language_code not in config.story_teller.available_languages:
+    if not language_code or not story_creator.is_language_supported(language_code):
         await callback.answer(i18n.messages.language_not_supported())
         return
 
@@ -63,10 +93,11 @@ async def handle_story_language_selection(
     protagonist_text = i18n.messages.define_protagonist()
     response_text = f"{confirmation_text}\n\n{protagonist_text}"
 
-    await callback.message.edit_text(
-        text=response_text,
-        reply_markup=back_keyboard(i18n=i18n, data=CDStoryBack()),
-    )
+    if callback.message:
+        await callback.message.edit_text(  # type: ignore
+            text=response_text,
+            reply_markup=back_keyboard(i18n=i18n, data=CDStoryBack()),
+        )
     await state.set_state(StoryCreationStates.defining_protagonist)
 
 
@@ -75,21 +106,21 @@ async def handle_protagonist_input(
     message: Message,
     state: FSMContext,
     i18n: I18nContext,
+    story_creator: StoryCreatorService,
 ) -> Any:
     """Handle protagonist definition input"""
     if not message.text:
         return
 
     user_input = message.text.strip()
-
-    # Store protagonist
+    if not await story_creator.validate_protagonist(user_input):
+        await message.reply(i18n.messages.errors.inappropriate_content())
+        return
     await state.update_data(protagonist=user_input)
 
     # Ask for setting
-    setting_text = i18n.messages.define_setting()
-
     await message.reply(
-        text=setting_text,
+        text=i18n.messages.define_setting(),
         reply_markup=back_keyboard(i18n=i18n, data=CDStoryBack()),
     )
     await state.set_state(StoryCreationStates.defining_setting)
@@ -101,19 +132,23 @@ async def handle_setting_input(
     state: FSMContext,
     i18n: I18nContext,
     story_teller: StoryTellerService,
+    story_creator: StoryCreatorService,
 ) -> Any:
     """Handle setting definition input"""
     if not message.text or not message.from_user:
         return
 
-    # TODO: validate user input
     user_input = message.text.strip()
-
+    if not await story_creator.validate_setting(user_input):
+        await message.reply(i18n.messages.errors.inappropriate_content())
+        return
     await state.update_data(setting=user_input)
     data = await state.get_data()
 
     try:
-        story_creation_params = StoryCreationParams(
+        # Use story creator service for validation and parameter creation
+        story_creation_params = await story_creator.create_story_params(
+            user_id=message.from_user.id,
             target_language_code=data["target_language_code"],
             protagonist=data["protagonist"],
             setting=data["setting"],
@@ -121,7 +156,7 @@ async def handle_setting_input(
         )
     except (ValidationError, KeyError) as e:
         logger.error("Story creation failed: %s", e)
-        await message.reply(i18n.messages.invalid_input())
+        await message.reply(i18n.messages.something_went_wrong())
         return
 
     confirmation_text = i18n.messages.story_setup_complete()
@@ -168,43 +203,45 @@ async def handle_story_back(
     callback: CallbackQuery,
     state: FSMContext,
     i18n: I18nContext,
-    config: AppConfig,
+    story_creator: StoryCreatorService,
 ) -> Any:
     """Handle back button in story creation flow"""
     current_state = await state.get_state()
 
     if current_state == StoryCreationStates.selecting_language.state:
         # Go back to main menu
-        await callback.message.edit_text(
-            text=i18n.messages.greeting(
-                name=callback.from_user.full_name if callback.from_user else "User"
-            ),
-            reply_markup=back_keyboard(i18n=i18n, data=CDMenu()),
-        )
+        if callback.message:
+            await callback.message.edit_text(  # type: ignore
+                text=i18n.messages.greeting(
+                    name=callback.from_user.full_name if callback.from_user else "User"
+                ),
+                reply_markup=back_keyboard(i18n=i18n, data=CDMenu()),
+            )
         await state.clear()
     elif current_state == StoryCreationStates.defining_protagonist.state:
         # Go back to language selection
-        await show_language_selection(callback, i18n, config)
+        await show_language_selection(callback, i18n, story_creator.get_available_languages())
         await state.set_state(StoryCreationStates.selecting_language)
     elif current_state == StoryCreationStates.defining_setting.state:
         # Go back to protagonist definition
-        await callback.message.edit_text(
-            text=i18n.messages.define_protagonist(),
-            reply_markup=back_keyboard(i18n=i18n, data=CDStoryBack()),
-        )
+        if callback.message:
+            await callback.message.edit_text(  # type: ignore
+                text=i18n.messages.define_protagonist(),
+                reply_markup=back_keyboard(i18n=i18n, data=CDStoryBack()),
+            )
         await state.set_state(StoryCreationStates.defining_protagonist)
 
 
 async def show_language_selection(
     callback: CallbackQuery,
     i18n: I18nContext,
-    config: AppConfig,
+    available_languages: list[str],
 ) -> None:
     """Show language selection keyboard for story creation"""
     keyboard_builder = InlineKeyboardBuilder()
 
     # Add language buttons
-    for lang_code in config.story_teller.available_languages:
+    for lang_code in available_languages:
         lang_name = getattr(i18n.messages, lang_code, lambda: lang_code.upper())()
         keyboard_builder.button(
             text=lang_name, callback_data=CDStoryLanguageSelect(language_code=lang_code)
@@ -216,7 +253,8 @@ async def show_language_selection(
     # Arrange buttons in a 3-column grid
     keyboard_builder.adjust(3)
 
-    await callback.message.edit_text(
-        text=i18n.messages.select_story_language(),
-        reply_markup=keyboard_builder.as_markup(),
-    )
+    if callback.message:
+        await callback.message.edit_text(  # type: ignore
+            text=i18n.messages.select_story_language(),
+            reply_markup=keyboard_builder.as_markup(),
+        )
