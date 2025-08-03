@@ -5,4 +5,8 @@ messages-language_select = 🌐 Sélectionne ta langue préférée pour l'interf
 messages-available_ui_language = Langues disponibles:
 messages-language_not_supported = ❌ Langue non prise en charge. Essaie à nouveau ou utilise le bouton ci-dessous.
 messages-language_changed = ✅ Langue changée vers {$language}
-buttons-show_languages = Afficher les langues disponibles 
+buttons-show_languages = Afficher les langues disponibles
+
+messages-story_language_select = 📚 Sélectionne ta langue préférée pour la création d'histoires:
+messages-story_language_not_supported = ❌ Langue d'histoire non prise en charge. Essaie à nouveau ou utilise le bouton ci-dessous.
+messages-story_language_changed = ✅ Langue d'histoire changée vers {$language} 

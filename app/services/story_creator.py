@@ -28,20 +28,20 @@ class StoryCreatorService(BaseService):
         )
 
     async def get_default_language_for_user(self, user_id: int) -> str | None:
-        """Get the default language for story creation based on user's last story language"""
+        """Get the default language for story creation based on user's story language"""
         user = await self.user_service.get(user_id)
         if not user or not user.use_last_story_language:
             return None
 
-        return user.last_story_language_code
+        return user.story_language_code
 
     async def update_user_language_preference(self, user_id: int, language_code: str) -> None:
-        """Update user's last story language preference"""
+        """Update user's story language preference"""
         user = await self.user_service.get(user_id)
-        if user and user.last_story_language_code != language_code:
+        if user and user.story_language_code != language_code:
             await self.user_service.update(
                 user=user,
-                last_story_language_code=language_code,
+                story_language_code=language_code,
                 use_last_story_language=True,
             )
 

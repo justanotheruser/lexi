@@ -4,45 +4,61 @@ commands:
       description: Start adventuring
     - command: language
       description: Change UI language
+    - command: story_language
+      description: Change story language
 
   ru:
     - command: start
       description: Начать приключаться
     - command: language
       description: Изменить язык интерфейса
+    - command: story_language
+      description: Изменить язык истории
 
   de:
     - command: start
       description: Abenteuer beginnen
     - command: language
       description: UI-Sprache ändern
+    - command: story_language
+      description: Geschichtensprache ändern
 
   fr:
     - command: start
       description: Commencer l'aventure
     - command: language
       description: Changer la langue de l'interface
+    - command: story_language
+      description: Changer la langue de l'histoire
 
   es:
     - command: start
       description: Comenzar aventura
     - command: language
       description: Cambiar idioma de la interfaz
+    - command: story_language
+      description: Cambiar idioma de la historia
 
   pl:
     - command: start
       description: Rozpocznij przygodę
     - command: language
       description: Zmień język interfejsu
+    - command: story_language
+      description: Zmień język historii
 
   nl:
     - command: start
       description: Begin avontuur
     - command: language
       description: UI-taal wijzigen
+    - command: story_language
+      description: Verhaaltaal wijzigen
 
   pt:
     - command: start
       description: Começar aventura
     - command: language
       description: Alterar idioma da interface
+    - command: story_language
+      description: Alterar idioma da história

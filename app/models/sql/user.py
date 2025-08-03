@@ -19,7 +19,7 @@ class User(Base, TimestampMixin):
     language: Mapped[str] = mapped_column(String(length=2))
     language_code: Mapped[Optional[str]] = mapped_column()
     blocked_at: Mapped[Optional[datetime]] = mapped_column()
-    last_story_language_code: Mapped[Optional[str]] = mapped_column()
+    story_language_code: Mapped[Optional[str]] = mapped_column()
     use_last_story_language: Mapped[bool] = mapped_column(default=True)
 
     def dto(self) -> UserDto:

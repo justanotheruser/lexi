@@ -14,7 +14,7 @@ class UserDto(ActiveRecordModel):
     language_code: Optional[str] = None
     bot_blocked: bool = False
     blocked_at: Optional[datetime] = None
-    last_story_language_code: Optional[str] = None
+    story_language_code: Optional[str] = None
     use_last_story_language: bool = True
 
     @property

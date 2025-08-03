@@ -6,3 +6,7 @@ messages-available_ui_language = Available languages:
 messages-language_not_supported = ❌ Language is not supported. Please try again or use the button below.
 messages-language_changed = ✅ Language changed to {$language}
 buttons-show_languages = Show available languages
+
+messages-story_language_select = 📚 Select your preferred language for story creation:
+messages-story_language_not_supported = ❌ Story language is not supported. Please try again or use the button below.
+messages-story_language_changed = ✅ Story language changed to {$language}
