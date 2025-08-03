@@ -1,17 +1,23 @@
 from __future__ import annotations
 
+import json
 from typing import TYPE_CHECKING, Any, Final
 
 from aiogram import F, Router
 from aiogram.filters import Command, CommandStart
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import CallbackQuery, Message, TelegramObject
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram_i18n import I18nContext
 
+from app.telegram.handlers.story_creation import StoryCreationStates, show_language_selection
 from app.telegram.keyboards.callback_data.menu import (
     CDCreateStory,
     CDLanguageSelect,
     CDMenu,
     CDShowLanguages,
+    CDStoryBack,
 )
 from app.telegram.keyboards.common import back_keyboard
 from app.telegram.keyboards.menu import (
@@ -45,14 +51,20 @@ async def greeting(
 
 @router.callback_query(CDCreateStory.filter())
 async def create_story(
-    _: TelegramObject,
+    callback: CallbackQuery,
     helper: MessageHelper,
     i18n: I18nContext,
+    state: FSMContext,
+    config: AppConfig,
 ) -> Any:
-    return await helper.answer(
-        text=i18n.messages.create_story(),
-        reply_markup=back_keyboard(i18n=i18n),
-    )
+    """Start story creation flow"""
+    # Set initial state
+    await state.set_state(StoryCreationStates.selecting_language)
+
+    # Show language selection
+    await show_language_selection(callback, i18n, config)
+
+    return None
 
 
 @router.message(Command("language"))

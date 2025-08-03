@@ -7,6 +7,7 @@ from .postgres import PostgresConfig
 from .redis import RedisConfig
 from .server import ServerConfig
 from .sql_alchemy import SQLAlchemyConfig
+from .story_teller import StoryTellerConfig
 from .telegram import TelegramConfig
 
 
@@ -24,3 +25,4 @@ class AppConfig(BaseSettings):
     redis: RedisConfig
     server: ServerConfig
     common: CommonConfig
+    story_teller: StoryTellerConfig

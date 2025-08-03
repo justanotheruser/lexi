@@ -15,3 +15,11 @@ class CDShowLanguages(CallbackData, prefix="show_languages"):
 
 class CDLanguageSelect(CallbackData, prefix="lang_select"):
     language_code: str
+
+
+class CDStoryLanguageSelect(CallbackData, prefix="story_lang_select"):
+    language_code: str
+
+
+class CDStoryBack(CallbackData, prefix="story_back"):
+    pass

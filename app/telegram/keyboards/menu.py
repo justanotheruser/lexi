@@ -2,7 +2,13 @@ from aiogram.types import InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram_i18n import I18nContext
 
-from .callback_data.menu import CDCreateStory, CDLanguageSelect, CDShowLanguages
+from .callback_data.menu import (
+    CDCreateStory,
+    CDLanguageSelect,
+    CDShowLanguages,
+    CDStoryBack,
+    CDStoryLanguageSelect,
+)
 
 
 def main_menu_keyboard(i18n: I18nContext) -> InlineKeyboardMarkup:
@@ -27,6 +33,28 @@ def language_selection_keyboard(locales: list[str], i18n: I18nContext) -> Inline
         else:
             lang_name = lang_code.upper()
         builder.button(text=lang_name, callback_data=CDLanguageSelect(language_code=lang_code))
+
+    # Arrange buttons in a 3-column grid
+    builder.adjust(3)
+    return builder.as_markup()
+
+
+def story_language_selection_keyboard(
+    available_languages: list[str], i18n: I18nContext
+) -> InlineKeyboardMarkup:
+    """Keyboard for selecting story language"""
+    builder: InlineKeyboardBuilder = InlineKeyboardBuilder()
+
+    # Add language buttons in a grid layout
+    for lang_code in available_languages:
+        if hasattr(i18n.messages, lang_code):
+            lang_name = getattr(i18n.messages, lang_code)()
+        else:
+            lang_name = lang_code.upper()
+        builder.button(text=lang_name, callback_data=CDStoryLanguageSelect(language_code=lang_code))
+
+    # Add back button
+    builder.button(text=i18n.buttons.back(), callback_data=CDStoryBack())
 
     # Arrange buttons in a 3-column grid
     builder.adjust(3)
