@@ -4,7 +4,6 @@ import logging
 from typing import TYPE_CHECKING, Any, Final
 
 from aiogram import F, Router
-from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 from aiogram.utils.keyboard import InlineKeyboardBuilder
@@ -22,72 +21,6 @@ if TYPE_CHECKING:
 logger: Final[logging.Logger] = logging.getLogger(__name__)
 
 router: Final[Router] = Router(name="story_dialog")
-
-
-@router.message(Command("start_story"))
-async def handle_start_story_command(
-    message: Message,
-    state: FSMContext,
-    i18n: I18nContext,
-    config: AppConfig,
-    story_teller: StoryTellerService,
-) -> Any:
-    """Handle start story command - initiates story creation flow"""
-    if not message.from_user:
-        return
-
-    # Check if user has story parameters in state
-    data = await state.get_data()
-    target_language = data.get("target_language_code")
-    protagonist = data.get("protagonist")
-    setting = data.get("setting")
-
-    if not all([target_language, protagonist, setting]):
-        await message.reply(i18n.messages.complete_story_setup())
-        return
-
-    # Get user's native language (default to English if not available)
-    native_language = message.from_user.language_code or "en"
-
-    # Create story parameters
-    story_params = StoryParams(
-        target_language_code=str(target_language),
-        protagonist=str(protagonist),
-        setting=str(setting),
-        native_language_code=native_language,
-    )
-
-    # Create story session
-    session = await story_teller.create_story_session(message.from_user.id, story_params)
-
-    # Generate initial story
-    story_bit = await story_teller.generate_initial_story(session)
-
-    # Format story text with key words
-    formatted_text = story_teller.format_story_text_with_key_words(
-        story_bit.text, story_bit.key_words
-    )
-
-    # Create keyboard with choices and vocabulary words
-    keyboard_builder = InlineKeyboardBuilder()
-
-    # Add story choices
-    for choice in story_bit.choices:
-        keyboard_builder.button(
-            text=choice.text, callback_data=CDStoryChoice(choice_id=choice.choice_id)
-        )
-
-    # Add vocabulary word buttons
-    for word in story_bit.key_words:
-        keyboard_builder.button(text=f"📖 {word}", callback_data=CDVocabularyWord(word=word))
-
-    # Arrange buttons: choices in one row, vocabulary words in another
-    keyboard_builder.adjust(1, len(story_bit.key_words))
-
-    await message.reply(
-        text=formatted_text,
-        reply_markup=keyboard_builder.as_markup(),
-    )
 
 
 @router.callback_query(CDStoryChoice.filter())

@@ -1,6 +1,5 @@
 # Story Setup Messages
 messages-story_setup_complete = ✅ Konfiguracja historii zakończona! Twoja przygoda jest gotowa do rozpoczęcia.
-messages-start_story_command = 🚀 Wpisz /start_story aby rozpocząć przygodę językową!
 messages-complete_story_setup = ⚠️ Najpierw ukończ konfigurację historii. Użyj przycisku "Utwórz historię" aby rozpocząć.
 
 # Story Session Messages

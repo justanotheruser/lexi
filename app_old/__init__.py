@@ -1,1 +1,0 @@
-# Lexi - AI-Powered Language Adventure Bot 

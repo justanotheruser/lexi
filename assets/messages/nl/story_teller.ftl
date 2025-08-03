@@ -1,6 +1,5 @@
 # Story Setup Messages
 messages-story_setup_complete = ✅ Verhaal setup voltooid! Je avontuur kan beginnen.
-messages-start_story_command = 🚀 Type /start_story om je taalavontuur te beginnen!
 messages-complete_story_setup = ⚠️ Voltooi eerst de verhaal setup. Gebruik de "Verhaal maken" knop om te beginnen.
 
 # Story Session Messages

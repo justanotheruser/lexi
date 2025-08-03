@@ -1,6 +1,5 @@
 # Story Setup Messages
 messages-story_setup_complete = ✅ Story setup complete! Your adventure is ready to begin.
-messages-start_story_command = 🚀 Type /start_story to begin your language adventure!
 messages-complete_story_setup = ⚠️ Please complete the story setup first. Use the "Create a story" button to get started.
 
 # Story Session Messages
