@@ -6,11 +6,9 @@ from aiogram.types import TelegramObject
 from aiogram.types import User as AiogramUser
 from aiogram_i18n import I18nMiddleware
 
-# from app.utils.logging import database as logger
-from loguru import logger
-
 from app.services.crud.user import UserService
 from app.telegram.middlewares.event_typed import EventTypedMiddleware
+from app.utils.logging import database as logger
 
 if TYPE_CHECKING:
     from app.models.dto.user import UserDto

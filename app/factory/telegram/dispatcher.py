@@ -14,7 +14,7 @@ from app.factory.services import create_services
 from app.factory.session_pool import create_session_pool
 from app.factory.telegram.i18n import create_i18n_middleware
 from app.telegram.handlers import admin, extra, main
-from app.telegram.middlewares import MessageHelperMiddleware, UserMiddleware
+from app.telegram.middlewares import ErrorLoggerMiddleware, MessageHelperMiddleware, UserMiddleware
 from app.utils import mjson
 
 
@@ -35,7 +35,7 @@ def create_dispatcher(config: AppConfig) -> Dispatcher:
             json_dumps=mjson.encode,
         ),
         config=config,
-        assets=Assets(),
+        assets=Assets(),  # type: ignore
         session_pool=session_pool,
         redis=redis,
         **create_services(
@@ -46,6 +46,7 @@ def create_dispatcher(config: AppConfig) -> Dispatcher:
     )
 
     dispatcher.include_routers(admin.router, main.router, extra.router)
+    dispatcher.update.outer_middleware(ErrorLoggerMiddleware())
     dispatcher.update.outer_middleware(UserMiddleware())
     i18n_middleware.setup(dispatcher=dispatcher)
     dispatcher.update.outer_middleware(MessageHelperMiddleware())
