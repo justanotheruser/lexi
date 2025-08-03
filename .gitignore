@@ -85,3 +85,6 @@ dump.rdb
 
 # Local development
 local_settings.py
+
+
+aiogram_bot_template/*
