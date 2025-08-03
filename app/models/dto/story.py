@@ -1,3 +1,4 @@
+import random
 from datetime import datetime
 
 from pydantic import BaseModel
@@ -15,11 +16,16 @@ class StoryParams(BaseModel):
     temperature: float
 
 
+class StoryLogic(BaseModel):
+    character_growths_moments_left: int
+
+
 class StorySession(BaseModel):
     """Story session data stored in Redis"""
 
     user_id: int
     params: StoryParams
+    logic: StoryLogic
     story_text: str = ""
     choices: list[str] = []
     key_words: list[str] = []

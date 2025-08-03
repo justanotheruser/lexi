@@ -1,15 +1,24 @@
 from __future__ import annotations
 
 import logging
+import random
 import re
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Final, List, Optional, Tuple
 
 from openai import AsyncOpenAI
 
-from app.models.dto.story import StoryBit, StoryChoice, StoryParams, StorySession, VocabularyWord
+from app.models.dto.story import (
+    StoryBit,
+    StoryChoice,
+    StoryLogic,
+    StoryParams,
+    StorySession,
+    VocabularyWord,
+)
 from app.models.dto.story_creation_params import StoryCreationParams
 from app.prompts import (
+    get_character_development_prompt,
     get_continue_story_prompt,
     get_initial_story_prompt,
     get_story_conclusion_prompt,
@@ -73,10 +82,11 @@ class StoryTellerService(BaseService):
             max_tokens=self.config.story_teller.openai.max_tokens,
             temperature=self.config.story_teller.openai.temperature,
         )
-
+        story_logic = StoryLogic(character_growths_moments_left=random.randint(1, 2))
         session = StorySession(
             user_id=user_id,
             params=story_params,
+            logic=story_logic,
             created_at=datetime.now(UTC),
             last_updated=datetime.now(UTC),
         )
@@ -139,6 +149,27 @@ class StoryTellerService(BaseService):
 
     async def continue_story(self, session: StorySession, choice_text: str) -> StoryBit:
         """Continue the story based on user choice"""
+        key_words = []
+        content = ""
+
+        if session.logic.character_growths_moments_left > 0 and random.random() < 0.25:
+            prompt = get_character_development_prompt(
+                target_language=session.params.target_language_code,
+                native_language=session.params.native_language_code,
+                protagonist=session.params.protagonist,
+                story_so_far=session.story_text,
+            )
+            response = await self.openai_client.chat.completions.create(
+                model=session.params.openai_model,
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=session.params.max_tokens,
+                temperature=session.params.temperature,
+            )
+            content = response.choices[0].message.content or ""
+            key_words = self._extract_key_words(content)
+            session.logic.character_growths_moments_left -= 1
+            await self.update_story_session(session)
+
         # Check if we should conclude the story
         should_conclude = session.turn_count >= 8  # After 8 turns, consider concluding
 
@@ -169,7 +200,7 @@ class StoryTellerService(BaseService):
             temperature=session.params.temperature,
         )
 
-        content = response.choices[0].message.content or ""
+        content += response.choices[0].message.content or ""
         story_text, choices = self._parse_story_response(content)
         key_words = self._extract_key_words(story_text)
 
