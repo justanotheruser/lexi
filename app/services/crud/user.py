@@ -48,6 +48,8 @@ class UserService(CrudService):
             return await repository.users.count()
 
     async def update(self, user: UserDto, **data: Any) -> Optional[UserDto]:
+        if "language_code" in data and data["language_code"] not in self.config.telegram.locales:
+            return None
         async with SQLSessionContext(session_pool=self.session_pool) as (repository, uow):
             for key, value in data.items():
                 setattr(user, key, value)

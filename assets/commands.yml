@@ -1,8 +1,48 @@
 commands:
   en:
     - command: start
-      description: Start the adventure
+      description: Start adventuring
+    - command: language
+      description: Change UI language
 
   ru:
     - command: start
-      description: Начать приключение
+      description: Начать приключаться
+    - command: language
+      description: Изменить язык интерфейса
+
+  de:
+    - command: start
+      description: Abenteuer beginnen
+    - command: language
+      description: UI-Sprache ändern
+
+  fr:
+    - command: start
+      description: Commencer l'aventure
+    - command: language
+      description: Changer la langue de l'interface
+
+  es:
+    - command: start
+      description: Comenzar aventura
+    - command: language
+      description: Cambiar idioma de la interfaz
+
+  pl:
+    - command: start
+      description: Rozpocznij przygodę
+    - command: language
+      description: Zmień język interfejsu
+
+  nl:
+    - command: start
+      description: Begin avontuur
+    - command: language
+      description: UI-taal wijzigen
+
+  pt:
+    - command: start
+      description: Começar aventura
+    - command: language
+      description: Alterar idioma da interface

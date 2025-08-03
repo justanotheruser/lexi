@@ -1,2 +1,2 @@
-what-language-to-learn = What language would you like to learn?
-
+messages-select_story_language = 🌐 Select story language
+buttons-create_story = 📜 Create a story

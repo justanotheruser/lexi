@@ -1,1 +1,2 @@
-what-language-to-learn = Какой язык ты хочешь выучить?
+messages-select_story_language = 🌐 Выбери язык истории
+buttons-create_story = 📜 Создать историю

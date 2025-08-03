@@ -1,0 +1,10 @@
+messages-en = Angielski
+messages-ru = Rosyjski
+messages-de = Niemiecki
+messages-fr = Francuski
+messages-es = Hiszpański
+messages-it = Włoski
+messages-pt = Portugalski
+messages-pl = Polski
+messages-nl = Holenderski
+messages-uk = Ukraiński
