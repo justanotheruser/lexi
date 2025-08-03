@@ -1,14 +1,16 @@
 from aiogram import Bot, Dispatcher
 
-# from app.factory import create_app_config, create_bot, create_dispatcher
-# from app.models.config import AppConfig
+from app.config import AppConfig
+
 # from app.runners.app import run_polling, run_webhook
 from app.utils.logging import setup_logger
+
+# from app.factory import create_bot, create_dispatcher
 
 
 def main() -> None:
     setup_logger()
-    # config: AppConfig = create_app_config()
+    config = AppConfig()  # type: ignore
     # bot: Bot = create_bot(config=config)
     # dispatcher: Dispatcher = create_dispatcher(config=config)
     # if config.telegram.use_webhook:
