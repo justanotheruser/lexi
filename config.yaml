@@ -1,3 +1,0 @@
-telegram:
-  mode: "polling"
-  webhook_path: "webhook"

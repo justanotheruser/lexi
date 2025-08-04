@@ -1,0 +1,41 @@
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: ./deployment/Dockerfile
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env.app
+    networks:
+      - lexi-network
+    depends_on:
+      - db
+      - redis
+
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    mem_limit: 1g
+    env_file:
+      - .env.postgres
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - lexi-network
+  
+  redis:
+    build:
+      context: redis
+      dockerfile: Dockerfile.redis
+    restart: unless-stopped
+    env_file:
+      - .env.redis
+    networks:
+      - lexi-network
+
+volumes:
+  postgres-data:
+networks:
+  lexi-network:
+    driver: bridge

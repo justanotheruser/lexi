@@ -101,7 +101,6 @@ poetry update
 ├── devcontainer.json    # VS Code devcontainer configuration
 ├── docker-compose.yml   # Docker services definition
 ├── Dockerfile          # App container definition
-├── init-db.sql        # Database initialization script
 └── README.md          # This file
 ```
 
