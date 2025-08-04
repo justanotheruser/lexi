@@ -12,6 +12,13 @@ STORY_CONFLICT_TYPES = [
     "POWER STRUGGLE - Face a stronger opponent",
     "NATURE CHALLENGE - Survive in dangerous environment",
 ]
+STORY_PACING_TYPES = [
+    "SLOW BURN - Start peaceful, build tension gradually",
+    "IMMEDIATE ACTION - Start with danger or excitement",
+    "MYSTERIOUS BEGINNING - Start with curiosity and wonder",
+    "CHARACTER INTRO - Start by establishing relationships",
+    "SETTING DISCOVERY - Start by exploring the environment",
+]
 
 
 def get_initial_story_prompt(
@@ -21,13 +28,15 @@ def get_initial_story_prompt(
     setting: str,
 ) -> str:
     """Generate initial story prompt with engaging conflict"""
-    return f"""You are Lexi, a master storyteller creating an ADVENTURE for a child learning {target_language}.
-Their native language is {native_language}.
+    return f"""You are masterful screenwriter and adventure book writer, giving master class in storytelling for a child learning {target_language}.
+    Their native language is {native_language}.
+    Do not use any other text than the story, and don't address the child, just tell the story.
 
 STORY SETUP:
 - Protagonist: {protagonist}
 - Setting: {setting}
 - Story conflict type: {random.choice(STORY_CONFLICT_TYPES)}
+- Story pacing type: {random.choice(STORY_PACING_TYPES)}
 
 CRITICAL RULES:
 1. Start with IMMEDIATE DANGER or MYSTERY that the {protagonist} must face
@@ -41,8 +50,9 @@ WRITE THE OPENING SCENE in {target_language} with:
 - Immediate hook (first sentence grabs attention)
 - Clear problem/danger
 - Two dramatic choices (numbered 1 and 2)
+- No text after the choices
 
-Make each choice feel like it could save or doom the {protagonist}!"""
+Make each choice feel important and impactful!"""
 
 
 def get_continue_story_prompt(
@@ -55,8 +65,9 @@ def get_continue_story_prompt(
     turn_count: int,
 ) -> str:
     """Generate story continuation with escalating tension"""
-    return f"""You are Lexi, creating a THRILLING ADVENTURE for a child learning {target_language}.
-Their native language is {native_language}.
+    return f"""You are masterful screenwriter and adventure book writer, giving master class in storytelling for a child learning {target_language}.
+    Their native language is {native_language}.
+    Do not use any other text than the story, and don't address the child, just tell the story.
 
 STORY ELEMENTS:
 - Protagonist: {protagonist}
@@ -81,6 +92,7 @@ WRITE THE NEXT SCENE in {target_language}:
 - Show consequences of their choice
 - Introduce new danger or mystery
 - Two dramatic choices (numbered 1 and 2)
+- No text after the choices
 
 If this is turn {turn_count} or higher, start building toward an EPIC CONCLUSION!"""
 
@@ -92,7 +104,10 @@ def get_character_development_prompt(
     story_so_far: str,
 ) -> str:
     """Generate character development moments"""
-    return f"""You are Lexi, developing the character of {protagonist} in a story for a child learning {target_language}.
+
+    return f"""You are masterful screenwriter and adventure book writer, developing the character of {protagonist} in a story for a child learning {target_language}.
+    Their native language is {native_language}.
+    Do not use any other text than the story, and don't address the child, just tell the story.
 Their native language is {native_language}.
 
 STORY SO FAR:
