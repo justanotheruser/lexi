@@ -10,8 +10,11 @@ services:
     networks:
       - lexi-network
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    restart: unless-stopped
 
   db:
     image: postgres:17-alpine
@@ -23,12 +26,19 @@ services:
       - postgres-data:/var/lib/postgresql/data
     networks:
       - lexi-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
   
   redis:
     build:
       context: redis
       dockerfile: Dockerfile.redis
     restart: unless-stopped
+    mem_limit: 500mb
     env_file:
       - .env.redis
     networks:

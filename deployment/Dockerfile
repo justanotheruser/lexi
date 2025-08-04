@@ -14,9 +14,10 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-# Install runtime dependencies
+# Install runtime dependencies including postgresql-client for pg_isready
 RUN apt-get update && apt-get install -y \
     gcc \
+    postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy Python packages from builder stage
@@ -28,6 +29,10 @@ COPY app/ ./app/
 COPY assets/ ./assets/
 COPY alembic/ ./alembic/
 COPY alembic.ini ./
+
+# Copy and set up entrypoint script
+COPY deployment/entrypoint.sh ./entrypoint.sh
+RUN chmod +x ./entrypoint.sh
 
 # Create non-root user for security
 RUN useradd --create-home --shell /bin/bash app \
@@ -41,5 +46,5 @@ EXPOSE 8000
 ENV PYTHONPATH=/app
 ENV PYTHONUNBUFFERED=1
 
-# Start the application (Telegram bot with FastAPI)
-CMD ["python", "-m", "app.main"]
+# Use the entrypoint script instead of direct python command
+CMD ["./entrypoint.sh"]

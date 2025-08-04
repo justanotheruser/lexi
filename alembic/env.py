@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 from alembic import context
 from app.models.sql import User
 from app.models.sql.base import Base
-from app.settings import get_settings
+from app.config import AppConfig
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -36,8 +36,13 @@ target_metadata = Base.metadata
 
 def get_url():
     """Get database URL from settings."""
-    settings = get_settings()
-    return settings.database_url
+    app_config = AppConfig()
+    
+    # Build URL manually to ensure password is properly included
+    postgres_config = app_config.postgres
+    password = postgres_config.password.get_secret_value()
+    url = f"postgresql+asyncpg://{postgres_config.user}:{password}@{postgres_config.host}:{postgres_config.port}/{postgres_config.db}"
+    return url
 
 
 def run_migrations_offline() -> None:
@@ -79,9 +84,15 @@ async def run_async_migrations() -> None:
     and associate a connection with the context.
 
     """
-
+    # Override the empty sqlalchemy.url from alembic.ini with our custom URL
+    url = get_url()
+    
+    # Create a new config section with our URL
+    section = config.get_section(config.config_ini_section, {})
+    section["sqlalchemy.url"] = url
+    
     connectable = async_engine_from_config(
-        config.get_section(config.config_ini_section, {}),
+        section,
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
     )
