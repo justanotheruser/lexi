@@ -32,11 +32,15 @@ services:
       - lexi-network
 
   redis:
-    image: redis:7-alpine
+    build:
+      context: ../deployment/redis
+      dockerfile: Dockerfile.redis
     restart: unless-stopped
     ports:
       - "6379:6379"
-    command: redis-server --save 20 1 --loglevel warning --requirepass redis123
+    mem_limit: 500mb
+    env_file:
+      - ../deployment/.env.dev.redis
     networks:
       - lexi-network
 
