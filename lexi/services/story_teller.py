@@ -314,6 +314,6 @@ class StoryTellerService(BaseService):
         for word in key_words:
             # Simple word replacement (case-insensitive)
             pattern = re.compile(re.escape(word), re.IGNORECASE)
-            formatted_text = pattern.sub(f"**{word}**", formatted_text)
+            formatted_text = pattern.sub(f"<u>{word}</u>", formatted_text)
 
         return formatted_text
