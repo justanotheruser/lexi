@@ -9,9 +9,8 @@ from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.config import AppConfig, Assets
-from app.factory.redis import create_redis
+from app.factory import create_redis, create_session_pool
 from app.factory.services import create_services
-from app.factory.session_pool import create_session_pool
 from app.factory.telegram.i18n import create_i18n_middleware
 from app.telegram.handlers import admin, extra, main, story_creation, story_dialog
 from app.telegram.middlewares import ErrorLoggerMiddleware, MessageHelperMiddleware, UserMiddleware
