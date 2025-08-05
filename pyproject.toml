@@ -4,7 +4,7 @@ version = "1.0.0"
 description = "AI-Powered Language Adventure Bot for teaching kids foreign languages"
 authors = ["Denis Sleptsov <hurrdurrrderp@gmail.com>"]
 readme = "README.md"
-packages = [{ include = "app" }]
+packages = [{ include = "lexi" }]
 
 [tool.poetry.dependencies]
 python = "^3.12"
