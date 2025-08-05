@@ -1,0 +1,67 @@
+from typing import Any, Optional
+
+from aiogram.types import User as AiogramUser
+from aiogram_i18n.cores import BaseCore
+
+from lexi.const import DEFAULT_LOCALE, TIME_1M
+from lexi.models.dto.user import UserDto
+from lexi.models.sql import User
+from lexi.services.crud.base import CrudService
+from lexi.services.postgres import SQLSessionContext
+from lexi.services.redis import redis_cache
+from lexi.utils.key_builder import build_key
+
+
+class UserService(CrudService):
+    async def clear_cache(self, user_id: int) -> None:
+        cache_key: str = build_key("cache", "get_user", user_id=user_id)
+        await self.redis.delete(cache_key)
+
+    async def create(self, aiogram_user: AiogramUser, i18n_core: BaseCore[Any]) -> UserDto:
+        db_user: User = User(
+            id=aiogram_user.id,
+            name=aiogram_user.full_name,
+            language=(
+                aiogram_user.language_code
+                if aiogram_user.language_code in i18n_core.available_locales
+                else DEFAULT_LOCALE
+            ),
+            language_code=aiogram_user.language_code,
+        )
+
+        async with SQLSessionContext(session_pool=self.session_pool) as (_, uow):
+            await uow.commit(db_user)
+
+        await self.clear_cache(user_id=aiogram_user.id)
+        return db_user.dto()
+
+    @redis_cache(prefix="get_user", ttl=TIME_1M)
+    async def get(self, user_id: int) -> Optional[UserDto]:
+        async with SQLSessionContext(session_pool=self.session_pool) as (repository, _):
+            user = await repository.users.get(user_id=user_id)
+            if user is None:
+                return None
+            return user.dto()
+
+    async def count(self) -> int:
+        async with SQLSessionContext(session_pool=self.session_pool) as (repository, _):
+            return await repository.users.count()
+
+    async def update(self, user: UserDto, **data: Any) -> Optional[UserDto]:
+        if "language_code" in data and data["language_code"] not in self.config.telegram.locales:
+            return None
+        if (
+            "story_language_code" in data
+            and data["story_language_code"] not in self.config.story_teller.available_languages
+        ):
+            return None
+        async with SQLSessionContext(session_pool=self.session_pool) as (repository, _):
+            for key, value in data.items():
+                setattr(user, key, value)
+            user_db = await repository.users.update(user_id=user.id, **user.model_state)
+            if user_db is None:
+                await self.clear_cache(user_id=user.id)
+                return None
+            updated_user = user_db.dto()
+            await self.clear_cache(user_id=user.id)
+            return updated_user

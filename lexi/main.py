@@ -1,0 +1,21 @@
+from aiogram import Bot, Dispatcher
+
+from lexi.config import AppConfig
+from lexi.factory import create_bot, create_dispatcher
+from lexi.runners.app import run_polling, run_webhook
+from lexi.utils.logging import setup_logger
+
+
+def main() -> None:
+    setup_logger()
+    config = AppConfig()  # type: ignore
+    bot: Bot = create_bot(config=config)
+    dispatcher: Dispatcher = create_dispatcher(config=config)
+    if config.telegram.use_webhook:
+        return run_webhook(dispatcher=dispatcher, bot=bot, config=config)
+    else:
+        return run_polling(dispatcher=dispatcher, bot=bot, config=config)
+
+
+if __name__ == "__main__":
+    main()
