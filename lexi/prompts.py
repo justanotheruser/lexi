@@ -138,7 +138,7 @@ Provide your response in this exact format:
 Definition: [simple definition in {target_language}]
 Translation: [translation in {native_language}]
 
-Keep both definition and translation simple and suitable for a 10-year-old child."""
+Keep both definition and translation simple and suitable for a 13-year-old child."""
 
 
 def get_story_conclusion_prompt(
