@@ -1,0 +1,22 @@
+@startuml LexiBotContext
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+title LexiBot Context Diagram
+
+top to bottom direction
+
+Person(user, "User", "A user of the language learning bot")
+Person(analytic, "Analytic", "Analizes usage patterns/user satisfaction")
+System(LexiBot, "Lexi Bot", "Bot for generating interactive stories in different languages")
+
+System_Ext(telegram_server, "Telegram Server", "API for sending messages to users")
+System_Ext(llm_api, "Third-Party LLM API", "External API for text generation/translation")
+System_Ext(image_generation_api, "Third-Party image generation API", "External API for text-to-image")
+
+Rel(user, telegram_server, "Uses the bot")
+Rel(analytic, LexiBot, "Studies user actions history")
+Rel(LexiBot, telegram_server, "Sends messages to users")
+Rel(telegram_server, LexiBot, "Calls webhook to notify about user actions")
+Rel(LexiBot, llm_api, "Sends propmts and fetches text data")
+Rel(LexiBot, image_generation_api, "Sends propmts and fetches images")
+@enduml

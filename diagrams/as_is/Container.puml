@@ -1,0 +1,24 @@
+@startuml LexiBotContainer
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title LexiBot Container Diagram
+
+top to bottom direction
+
+System_Ext(telegram_server, "Telegram Server", "API for sending messages to users")
+System(LexiBot, "Lexi Bot", "Bot for generating interactive stories in different languages")
+
+Container_Boundary(LexiBot, "Lexi Bot") {
+  Container(WebServer, "Web Server", "FastAPI, aiogram", "Handles user interactions")
+  Container(Cache, "Cache", "Redis", "Cache for user data and stories")
+  Container(Database, "Database", "PostgreSQL", "Stores user data, stories, etc.")
+}
+
+System_Ext(llm_api, "Third-Party LLM API", "External API for text generation/translation")
+
+Rel(telegram_server, WebServer, "Calls webhook to notify about user actions")
+Rel(WebServer, telegram_server, "Sends messages to users")
+Rel(WebServer, Cache, "Reads/Writes user settings (UI language, story language, etc)")
+Rel(WebServer, Database, "Reads/Writes user settings")
+Rel(WebServer, llm_api, "Sends propmts and fetches text data")
+@enduml

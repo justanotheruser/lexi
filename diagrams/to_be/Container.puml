@@ -1,0 +1,42 @@
+@startuml LexiBotContainer
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title LexiBot Container Diagram
+
+top to bottom direction
+
+System_Ext(telegram_server, "Telegram Server", "API for sending messages to users")
+Person(analytic, "Analytic", "Analizes usage patterns/user satisfaction")
+System(LexiBot, "Lexi Bot", "Bot for generating interactive stories in different languages")
+
+Container_Boundary(LexiBot, "Lexi Bot") {
+  Container(WebServer, "Web Server", "FastAPI, aiogram", "Handles user interactions")
+  Container(StoryTeller, "Story Teller Server", "FastAPI, Celery", "Generates and progresses stories")
+  Container(StoryTellerWorker, "Story Teller Worker", "FastAPI,Celery", "Sends requests to LLM API")
+  Container(Cache, "Cache", "Redis", "Cache for user data and stories")
+  Container(Database, "Database", "PostgreSQL", "Stores user data, stories, etc.")
+  Container(Queue, "Queue", "RabbitMQ", "Queue for tasks for StoryTeller")
+  Container(PubSub, "PubSub", "Redis", "Stream for sending story progress events to DB")
+  Container(StreamProcessor, "Stream Processor", "Benthos", "Writes story progress events to DB")
+}
+
+System_Ext(llm_api, "Third-Party LLM API", "External API for text generation/translation")
+System_Ext(image_generation_api, "Third-Party image generation API", "External API for text-to-image")
+
+Rel(telegram_server, WebServer, "Calls webhook to notify about user actions")
+Rel(WebServer, telegram_server, "Sends messages to users")
+Rel(WebServer, Cache, "Reads/Writes user settings (UI language, story language, etc)")
+Rel(WebServer, Database, "Reads/Writes user settings")
+Rel(WebServer, StoryTeller, "Sends user requests to generate/progress stories")
+Rel(StoryTeller, Queue, "Pushes tasks to queue")
+Rel(StoryTellerWorker, Queue, "Pulls tasks")
+Rel(StoryTellerWorker, llm_api, "Sends propmts and fetches text data")
+Rel(StoryTellerWorker, Cache, "Reads story so far")
+Rel(StoryTellerWorker, Cache, "Writes story progress for possible choice")
+Rel(WebServer, Cache, "Reads story progress for choice made by user, updates story so far")
+Rel(WebServer, PubSub, "Publishes event about story progress")
+Rel(PubSub, StreamProcessor, "Sends events about story progress")
+Rel(StreamProcessor, Database, "Writes events about story progress")
+Rel(analytic, Database, "Performs SQL queries for analytics")
+Rel(WebServer, image_generation_api, "Sends propmts and fetches images")
+@enduml
