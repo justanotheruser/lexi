@@ -25,13 +25,13 @@ COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/pytho
 COPY --from=builder /usr/local/bin /usr/local/bin
 
 # Copy application code
-COPY app/ ./app/
+COPY lexi/ ./lexi/
 COPY assets/ ./assets/
 COPY alembic/ ./alembic/
 COPY alembic.ini ./
 
 # Copy and set up entrypoint script
-COPY deployment/entrypoint.sh ./entrypoint.sh
+COPY entrypoint.sh ./entrypoint.sh
 RUN chmod +x ./entrypoint.sh
 
 # Create non-root user for security

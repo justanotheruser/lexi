@@ -19,4 +19,4 @@ echo "Database is ready. Running migrations..."
 alembic upgrade head
 
 echo "Migrations completed. Starting application..."
-exec python -m app.main 
+exec python -m lexi.main 

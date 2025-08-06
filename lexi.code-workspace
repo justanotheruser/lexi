@@ -1,0 +1,23 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "deployment"
+		},
+		{
+			"path": "diagrams"
+		},
+		{
+			"path": "event_stream_processor"
+		},
+		{
+			"path": "story_teller"
+		},
+		{
+			"path": "bot_server"
+		}
+	],
+	"settings": {}
+}
